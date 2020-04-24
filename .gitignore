@@ -1,0 +1,5 @@
+.idea/
+*.gif
+conf.py
+venv/
+**/__pycache__/
