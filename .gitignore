@@ -1,5 +1,6 @@
 .idea/
 *.gif
-conf.py
+conf*.py
 venv/
 **/__pycache__/
+creds*

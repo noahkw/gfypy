@@ -4,6 +4,7 @@ import time
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from threading import Thread
 from urllib.parse import urlparse
+from pathlib import Path
 
 import requests
 
@@ -36,16 +37,33 @@ class Gfypy:
     REDIRECT_URI = 'http://localhost:8000/callback'
     GFYCATS_ENDPOINT = 'https://api.gfycat.com/v1/gfycats'
     FILEDROP_ENDPOINT = 'https://filedrop.gfycat.com/'
+    USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
+    ME_ENDPOINT = 'https://api.gfycat.com/v1/me'
 
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id, client_secret, auth_file_path):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.access_token = None
-        self.auth = None
+        self.auth_file_path = Path(auth_file_path)
+        self.bearer_auth = None
+        self.auth = {
+            'access_token': None,
+            'expires_in': None,
+            'refresh_token': None,
+            'refresh_token_expires_in': None,
+            'resource_owner': None
+        }
+
+    def authenticate(self):
+        if not self.auth_file_path.is_file():
+            print(f'Credentials file "{self.auth_file_path}" does not exist. Creating it now.')
+            open(self.auth_file_path, 'w')
+
+        with open(self.auth_file_path, 'r') as auth_file:
+            self.auth = json.loads(auth_file.read())
+            self._refresh_oauth_token()
 
     def initial_auth(self):
         self._get_oauth_token(self._get_oauth_code())
-        print(self.auth)
 
     def _get_oauth_code(self):
         """
@@ -85,7 +103,26 @@ class Gfypy:
         resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
                              headers={'content-type': 'application/json'})
 
-        self.auth = BearerAuth(resp.json()['access_token'])
+        self.auth = resp.json()
+        self.bearer_auth = BearerAuth(resp.json()['access_token'])
+
+    def _refresh_oauth_token(self):
+        payload = {
+            'refresh_token': self.auth['refresh_token'],
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'grant_type': 'refresh',
+        }
+
+        resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
+                             headers={'content-type': 'application/json'})
+
+        self.auth = resp.json()
+        self.bearer_auth = BearerAuth(resp.json()['access_token'])
+
+    def _auth_to_disk(self):
+        with open(self.auth_file_path, 'w') as auth_file:
+            auth_file.write(json.dumps(self.auth))
 
     def _get_key(self, title=None, tags=None):
         payload = {
@@ -116,3 +153,57 @@ class Gfypy:
         resp = requests.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
 
         print(resp.status_code)
+
+    def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_by=None):
+        if limit % 10 != 0:
+            print(f'Limit needs to be divisible by 10. Rounding up.')
+
+        request_url = f'{Gfypy.USERS_ENDPOINT}/{user_id}/gfycats'
+        gfycats = []
+
+        i = 0
+        cursor = ''
+        while i < limit:
+            resp = requests.get(f'{request_url}?cursor={cursor}', auth=self.bearer_auth)
+            cursor = resp.json()['cursor']
+            gfycats.extend(resp.json()['gfycats'])
+            if i == len(gfycats):
+                print('Got no new entries from Gfycat. Stopping here.')
+                break
+            i = len(gfycats)
+            print(i)
+
+        if filter_by:
+            gfycats = [g for g in gfycats if g[filter_by] != '0']
+
+        if sort_by:
+            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
+
+        return gfycats
+
+    def get_own_feed(self, limit=20, sort_by=None, desc=True, filter_by=None):
+        if limit % 10 != 0:
+            print(f'Limit needs to be divisible by 10. Rounding up.')
+
+        request_url = f'{Gfypy.ME_ENDPOINT}/gfycats'
+        gfycats = []
+
+        i = 0
+        cursor = ''
+        while i < limit:
+            resp = requests.get(f'{request_url}?cursor={cursor}', auth=self.bearer_auth)
+            cursor = resp.json()['cursor']
+            gfycats.extend(resp.json()['gfycats'])
+            if i == len(gfycats):
+                print('Got no new entries from Gfycat. Stopping here.')
+                break
+            i = len(gfycats)
+            print(i)
+
+        if filter_by:
+            gfycats = [g for g in gfycats if g[filter_by] != '0']
+
+        if sort_by:
+            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
+
+        return gfycats
