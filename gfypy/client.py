@@ -32,13 +32,25 @@ class Gfypy:
         auth_url = f'{Gfypy.AUTH_ENDPOINT}?client_id={self.client_id}' \
                    f'&scope=all' \
                    f'&state=Gfypy' \
-                   f'&response_type=token' \
+                   f'&response_type=code' \
                    f'&redirect_uri={Gfypy.REDIRECT_URI}'
         webbrowser.open(auth_url)
 
-        print('Please paste the entire URL after clicking "OK": ')
-        self.access_token = input()
-        self.auth = BearerAuth(self.access_token)
+        print('Please paste the Code that appears after clicking "OK": ')
+        code = input()
+
+        payload = {
+            'code': code,
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'grant_type': 'authorization_code',
+            'redirect_uri': Gfypy.REDIRECT_URI
+        }
+
+        resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
+                             headers={'content-type': 'application/json'})
+
+        self.auth = BearerAuth(resp.json()['access_token'])
 
     def _get_key(self, title=None, tags=None):
         payload = {
