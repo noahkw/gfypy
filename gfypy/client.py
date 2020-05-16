@@ -164,7 +164,7 @@ class Gfypy:
         i = 0
         cursor = ''
         while i < limit:
-            resp = requests.get(f'{request_url}?cursor={cursor}', auth=self.bearer_auth)
+            resp = requests.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
             gfycats.extend(resp.json()['gfycats'])
             if i == len(gfycats):
@@ -191,7 +191,7 @@ class Gfypy:
         i = 0
         cursor = ''
         while i < limit:
-            resp = requests.get(f'{request_url}?cursor={cursor}', auth=self.bearer_auth)
+            resp = requests.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
             gfycats.extend(resp.json()['gfycats'])
             if i == len(gfycats):

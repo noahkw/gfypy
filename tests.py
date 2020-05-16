@@ -9,10 +9,10 @@ if __name__ == '__main__':
     # gfypy._auth_to_disk()
 
     start = time.time()
-    gfycats = gfypy.get_user_feed('_', limit=1000, filter_by='nsfw')
+    gfycats = gfypy.get_own_feed(limit=2000)
     end = time.time()
     print(f'{end - start}s elapsed')
-    print(gfycats)
+    print(len(gfycats))
 
     # gfypy.get_key('this is a test', ['tag', 'tag2', 'tag with 한글'])
     # gfypy.upload_from_file('this is a test', ['tag', 'tag2', 'tag with 한글'], 'unamused_fin_longest.gif')
