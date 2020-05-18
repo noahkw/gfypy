@@ -131,7 +131,7 @@ class Gfypy:
         }
 
         resp = requests.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
-                             auth=self.auth, headers={'content-type': 'application/json'})
+                             auth=self.bearer_auth, headers={'content-type': 'application/json'})
         print(resp.json())
         return resp.json()['gfyname']
 
