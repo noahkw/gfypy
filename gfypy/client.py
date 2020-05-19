@@ -39,6 +39,7 @@ class Gfypy:
     FILEDROP_ENDPOINT = 'https://filedrop.gfycat.com/'
     USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
     ME_ENDPOINT = 'https://api.gfycat.com/v1/me'
+    UPLOAD_STATUS_ENDPOINT = 'https://api.gfycat.com/v1/gfycats/fetch/status'
 
     def __init__(self, client_id, client_secret, auth_file_path):
         self.client_id = client_id
@@ -124,10 +125,12 @@ class Gfypy:
         with open(self.auth_file_path, 'w') as auth_file:
             auth_file.write(json.dumps(self.auth))
 
-    def _get_key(self, title=None, tags=None):
+    def _get_key(self, title='', tags=[], keep_audio=True, check_duplicate=False):
         payload = {
             'title': title,
-            'tags': tags
+            'tags': tags,
+            'keepAudio': keep_audio,
+            'noMd5': not check_duplicate
         }
 
         resp = requests.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
@@ -135,15 +138,17 @@ class Gfypy:
         print(resp.json())
         return resp.json()['gfyname']
 
-    def upload_from_file(self, title=None, tags=None, filename=None):
+    def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
         """
         Upload a local file to gfycat
         :param title:
         :param tags:
         :param filename:
+        :param keep_audio:
+        :param check_duplicate:
         :return:
         """
-        key = self._get_key(title, tags)
+        key = self._get_key(title, tags, keep_audio, check_duplicate)
         payload = {
             'key': key
         }
@@ -153,6 +158,10 @@ class Gfypy:
         resp = requests.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
 
         print(resp.status_code)
+
+    def _check_upload_status(self, gfy_key):
+        resp = requests.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
+        return resp.json()
 
     def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_by=None):
         if limit % 10 != 0:
