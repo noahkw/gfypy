@@ -217,3 +217,7 @@ class Gfypy:
             gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
 
         return gfycats
+
+    def get_gfycat(self, _id):
+        resp = requests.get(f'{Gfypy.GFYCATS_ENDPOINT}/{_id}', auth=self.bearer_auth)
+        return resp.json()
