@@ -1,6 +1,10 @@
 # gfypy ![Python package](https://github.com/noahkw/gfypy/workflows/Python%20package/badge.svg)
 
-This project is not on PyPi as of yet, but it may be installed directly from source: 
+Install the latest release from PyPi: 
+
+`python -m pip install gfypy` 
+
+Or install the latest development version from source: 
 
 `python -m pip install -U git+https://github.com/noahkw/gfypy`
 
