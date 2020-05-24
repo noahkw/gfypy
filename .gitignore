@@ -4,3 +4,6 @@ conf*.py
 venv/
 **/__pycache__/
 creds*
+build/
+dist/
+*.egg-info

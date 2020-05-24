@@ -1,13 +1,14 @@
 import json
-import webbrowser
 import time
+import webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
 from threading import Thread
 from urllib.parse import urlparse
-from pathlib import Path
-from gfypy.exceptions import GfypyApiException
 
 import requests
+
+from gfypy.exceptions import GfypyApiException
 
 
 class BearerAuth(requests.auth.AuthBase):
