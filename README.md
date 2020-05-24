@@ -1,4 +1,4 @@
-# gfypy
+# gfypy ![Python package](https://github.com/noahkw/gfypy/workflows/Python%20package/badge.svg)
 
 This project is not on PyPi as of yet, but it may be installed directly from source: 
 
