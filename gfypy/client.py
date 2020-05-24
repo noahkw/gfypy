@@ -34,6 +34,7 @@ class AuthCallbackRequestHandler(SimpleHTTPRequestHandler):
 
 
 class Gfypy:
+    GFYCAT_URL = 'https://gfycat.com'
     AUTH_ENDPOINT = 'https://gfycat.com/oauth/authorize'
     ACCESS_TOKEN_ENDPOINT = 'https://api.gfycat.com/v1/oauth/token'
     REDIRECT_URI = 'http://localhost:8000/callback'
@@ -55,6 +56,7 @@ class Gfypy:
             'refresh_token_expires_in': None,
             'resource_owner': None
         }
+        self.processing_gfys = []
 
     def authenticate(self):
         if not self.auth_file_path.is_file():
@@ -153,7 +155,10 @@ class Gfypy:
 
         resp = requests.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
                              auth=self.bearer_auth, headers={'content-type': 'application/json'})
-        print(resp.json())
+
+        if resp.status_code != 200:
+            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
         return resp.json()['gfyname']
 
     def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
@@ -173,12 +178,30 @@ class Gfypy:
         files = {
             'file': (key, open(filename, 'rb').read())
         }
+
         resp = requests.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
 
-        print(resp.status_code)
+        if resp.status_code != 204:
+            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
+        status = self._check_upload_status(key)
+
+        while status['task'] != 'complete':
+            time.sleep(3)
+            status = self._check_upload_status(key)
+            print(status)
+
+        print(f'{filename} has been uploaded as {Gfypy.GFYCAT_URL}/{key}.')
+
+        info = self.get_gfycat(key)
+        return info
 
     def _check_upload_status(self, gfy_key):
         resp = requests.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
+
+        if resp.status_code != 200:
+            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
         return resp.json()
 
     def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_by=None):
