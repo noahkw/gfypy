@@ -5,6 +5,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from threading import Thread
 from urllib.parse import urlparse
 from pathlib import Path
+from gfypy.exceptions import GfypyApiException
 
 import requests
 
@@ -220,4 +221,8 @@ class Gfypy:
 
     def get_gfycat(self, _id):
         resp = requests.get(f'{Gfypy.GFYCATS_ENDPOINT}/{_id}', auth=self.bearer_auth)
+
+        if resp.status_code != 200:
+            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
         return resp.json()
