@@ -10,3 +10,12 @@ class GfypyApiException(GfypyException):
 
     def __str__(self):
         return f"The Gfycat API responded with a {self.status_code}: {self.error_msg}"
+
+
+class GfypyAuthException(GfypyApiException):
+    def __init__(self, error_msg, status_code, code):
+        super().__init__(error_msg, status_code)
+        self.code = code
+
+    def __str__(self):
+        return f"The Gfycat API responded with a {self.status_code} / {self.code}: {self.error_msg}"

@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from gfypy.exceptions import GfypyApiException
+from gfypy.exceptions import GfypyApiException, GfypyAuthException
 
 
 class BearerAuth(requests.auth.AuthBase):
@@ -59,13 +59,21 @@ class Gfypy:
     def authenticate(self):
         if not self.auth_file_path.is_file():
             print(f'Credentials file "{self.auth_file_path}" does not exist. Creating it now.')
-            open(self.auth_file_path, 'w')
+            with open(self.auth_file_path, 'w') as auth_file:
+                auth_file.write(json.dumps(self.auth))
 
         with open(self.auth_file_path, 'r') as auth_file:
             self.auth = json.loads(auth_file.read())
-            self._refresh_oauth_token()
+            try:
+                self._refresh_oauth_token()
+            except GfypyAuthException as e:
+                if e.code == 'InvalidRefreshToken':
+                    self._initial_auth()
+                    self._auth_to_disk()
+                else:
+                    raise
 
-    def initial_auth(self):
+    def _initial_auth(self):
         self._get_oauth_token(self._get_oauth_code())
 
     def _get_oauth_code(self):
@@ -106,6 +114,10 @@ class Gfypy:
         resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
                              headers={'content-type': 'application/json'})
 
+        if resp.status_code != 200:
+            raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                     resp.json()['errorMessage']['code'])
+
         self.auth = resp.json()
         self.bearer_auth = BearerAuth(resp.json()['access_token'])
 
@@ -119,6 +131,10 @@ class Gfypy:
 
         resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
                              headers={'content-type': 'application/json'})
+
+        if resp.status_code != 200:
+            raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                     resp.json()['errorMessage']['code'])
 
         self.auth = resp.json()
         self.bearer_auth = BearerAuth(resp.json()['access_token'])

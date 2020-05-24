@@ -30,5 +30,5 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     keywords=['gfycat api wrapper'],
-    packages=find_packages()
+    packages=find_packages(), install_requires=['requests']
 )
