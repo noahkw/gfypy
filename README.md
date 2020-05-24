@@ -8,7 +8,7 @@ This project is not on PyPi as of yet, but it may be installed directly from sou
 
 Request API credentials at https://developers.gfycat.com/signup/#/apiform. Make sure to add `http://localhost:8000` as a redirect URI or the OAuth authentication will fail.
 
-```
+```python
 from gfypy.client import Gfypy
 
 gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, './creds.json')
