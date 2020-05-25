@@ -204,7 +204,7 @@ class Gfypy:
 
         return resp.json()
 
-    def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_by=None):
+    def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_predicate=None):
         if limit % 10 != 0:
             print(f'Limit needs to be divisible by 10. Rounding up.')
 
@@ -223,15 +223,15 @@ class Gfypy:
             i = len(gfycats)
             print(i)
 
-        if filter_by:
-            gfycats = [g for g in gfycats if g[filter_by] != '0']
+        if filter_predicate:
+            gfycats = [g for g in gfycats if filter_predicate(g)]
 
         if sort_by:
             gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
 
         return gfycats
 
-    def get_own_feed(self, limit=20, sort_by=None, desc=True, filter_by=None, gatekeeper=None):
+    def get_own_feed(self, limit=20, sort_by=None, desc=True, filter_predicate=None):
         if limit % 10 != 0:
             print(f'Limit needs to be divisible by 10. Rounding up.')
 
@@ -250,10 +250,9 @@ class Gfypy:
             i = len(gfycats)
             print(i)
 
-        if filter_by:
-            gfycats = [g for g in gfycats if g[filter_by] != '0']
-        if gatekeeper:
-            gfycats = [g for g in gfycats if g.get("gatekeeper") == gatekeeper]
+        if filter_predicate:
+            gfycats = [g for g in gfycats if filter_predicate(g)]
+
         if sort_by:
             gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
 
@@ -265,4 +264,4 @@ class Gfypy:
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
 
-        return resp.json()
+        return resp.json()['gfyItem']
