@@ -216,6 +216,14 @@ class Gfypy:
         cursor = ''
         while i < limit:
             resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
+
+            if resp.status_code != 200:
+                if resp.status_code == 401:
+                    raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                             resp.json()['errorMessage']['code'])
+                else:
+                    raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
             cursor = resp.json()['cursor']
             gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
             if i == len(gfycats):
@@ -243,6 +251,14 @@ class Gfypy:
         cursor = ''
         while i < limit:
             resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
+
+            if resp.status_code != 200:
+                if resp.status_code == 401:
+                    raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                             resp.json()['errorMessage']['code'])
+                else:
+                    raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
             cursor = resp.json()['cursor']
             gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
             if i == len(gfycats):
