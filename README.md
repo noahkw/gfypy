@@ -1,4 +1,4 @@
-# gfypy ![Python package](https://github.com/noahkw/gfypy/workflows/Python%20package/badge.svg)
+# gfypy ![Python package](https://github.com/noahkw/gfypy/workflows/Python%20package/badge.svg) [![PyPI version](https://badge.fury.io/py/gfypy.svg)](https://badge.fury.io/py/gfypy)
 
 Install the latest release from PyPi: 
 
