@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 import requests
 
 from gfypy.exceptions import GfypyApiException, GfypyAuthException
+from gfypy.models import Gfy
 
 
 class BearerAuth(requests.auth.AuthBase):
@@ -132,7 +133,7 @@ class Gfypy:
         }
 
         resp = self.session.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
-                             headers={'content-type': 'application/json'})
+                                 headers={'content-type': 'application/json'})
 
         if resp.status_code != 200:
             raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
@@ -154,7 +155,7 @@ class Gfypy:
         }
 
         resp = self.session.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
-                             auth=self.bearer_auth, headers={'content-type': 'application/json'})
+                                 auth=self.bearer_auth, headers={'content-type': 'application/json'})
 
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
@@ -193,8 +194,8 @@ class Gfypy:
 
         print(f'{filename} has been uploaded as {Gfypy.GFYCAT_URL}/{key}.')
 
-        info = self.get_gfycat(key)
-        return info
+        gfy = self.get_gfycat(key)
+        return gfy
 
     def _check_upload_status(self, gfy_key):
         resp = self.session.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
@@ -216,7 +217,7 @@ class Gfypy:
         while i < limit:
             resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
-            gfycats.extend(resp.json()['gfycats'])
+            gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
@@ -243,7 +244,7 @@ class Gfypy:
         while i < limit:
             resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
-            gfycats.extend(resp.json()['gfycats'])
+            gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
@@ -264,4 +265,4 @@ class Gfypy:
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
 
-        return resp.json()['gfyItem']
+        return Gfy.from_dict(resp.json()['gfyItem'])
