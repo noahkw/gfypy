@@ -1,6 +1,5 @@
 class Gfy(dict):
     def __init__(self, **kwargs):
-        super().__init__(self, **kwargs)
         self.tags = kwargs['tags']
         self.languageCategories = kwargs['languageCategories']
         self.domainWhitelist = kwargs['domainWhitelist']
@@ -27,9 +26,9 @@ class Gfy(dict):
         self.description = kwargs['description']
         self.hasTransparency = kwargs['hasTransparency']
         self.hasAudio = kwargs['hasAudio']
-        self.likes = kwargs['likes']
-        self.dislikes = kwargs['dislikes']
-        self.gfyNumber = kwargs['gfyNumber']
+        self.likes = int(kwargs['likes'])
+        self.dislikes = int(kwargs['dislikes'])
+        self.gfyNumber = int(kwargs['gfyNumber'])
         self.gfyId = kwargs['gfyId']
         self.gfyName = kwargs['gfyName']
         self.avgColor = kwargs['avgColor']
@@ -46,6 +45,8 @@ class Gfy(dict):
         self.md5 = kwargs['md5'] if 'md5' in kwargs else None
         self.source = kwargs['source']
 
+        super().__init__(self, **self.__dict__)
+
     def __getitem__(self, attr):
         """Makes Gfy objects behave like a dict"""
         return getattr(self, attr)
@@ -57,4 +58,3 @@ class Gfy(dict):
     @staticmethod
     def from_dict_list(source):
         return [Gfy.from_dict(gfy) for gfy in source]
-
