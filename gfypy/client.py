@@ -56,7 +56,7 @@ class Gfypy:
             'refresh_token_expires_in': None,
             'resource_owner': None
         }
-        self.processing_gfys = []
+        self.session = requests.Session()
 
     def authenticate(self):
         if not self.auth_file_path.is_file():
@@ -113,8 +113,8 @@ class Gfypy:
             'redirect_uri': Gfypy.REDIRECT_URI
         }
 
-        resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
-                             headers={'content-type': 'application/json'})
+        resp = self.session.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
+                                 headers={'content-type': 'application/json'})
 
         if resp.status_code != 200:
             raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
@@ -131,7 +131,7 @@ class Gfypy:
             'grant_type': 'refresh',
         }
 
-        resp = requests.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
+        resp = self.session.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
                              headers={'content-type': 'application/json'})
 
         if resp.status_code != 200:
@@ -153,7 +153,7 @@ class Gfypy:
             'noMd5': not check_duplicate
         }
 
-        resp = requests.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
+        resp = self.session.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
                              auth=self.bearer_auth, headers={'content-type': 'application/json'})
 
         if resp.status_code != 200:
@@ -179,7 +179,7 @@ class Gfypy:
             'file': (key, open(filename, 'rb').read())
         }
 
-        resp = requests.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
+        resp = self.session.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
 
         if resp.status_code != 204:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
@@ -197,7 +197,7 @@ class Gfypy:
         return info
 
     def _check_upload_status(self, gfy_key):
-        resp = requests.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
+        resp = self.session.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
 
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
@@ -214,7 +214,7 @@ class Gfypy:
         i = 0
         cursor = ''
         while i < limit:
-            resp = requests.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
+            resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
             gfycats.extend(resp.json()['gfycats'])
             if i == len(gfycats):
@@ -241,7 +241,7 @@ class Gfypy:
         i = 0
         cursor = ''
         while i < limit:
-            resp = requests.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
+            resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
             cursor = resp.json()['cursor']
             gfycats.extend(resp.json()['gfycats'])
             if i == len(gfycats):
@@ -259,7 +259,7 @@ class Gfypy:
         return gfycats
 
     def get_gfycat(self, _id):
-        resp = requests.get(f'{Gfypy.GFYCATS_ENDPOINT}/{_id}', auth=self.bearer_auth)
+        resp = self.session.get(f'{Gfypy.GFYCATS_ENDPOINT}/{_id}', auth=self.bearer_auth)
 
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
