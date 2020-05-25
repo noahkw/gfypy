@@ -225,7 +225,7 @@ class Gfypy:
                     raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
 
             cursor = resp.json()['cursor']
-            gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
+            gfycats.extend(Gfy.from_dict_list(self, resp.json()['gfycats']))
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
@@ -260,7 +260,7 @@ class Gfypy:
                     raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
 
             cursor = resp.json()['cursor']
-            gfycats.extend(Gfy.from_dict_list(resp.json()['gfycats']))
+            gfycats.extend(Gfy.from_dict_list(self, resp.json()['gfycats']))
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
@@ -281,4 +281,39 @@ class Gfypy:
         if resp.status_code != 200:
             raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
 
-        return Gfy.from_dict(resp.json()['gfyItem'])
+        return Gfy.from_dict(self, resp.json()['gfyItem'])
+
+    def _set_gfycat_title(self, _id, new_title):
+        payload = {
+            'value': new_title
+        }
+
+        resp = self.session.put(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}/title', auth=self.bearer_auth,
+                                data=json.dumps(payload))
+
+        if resp.status_code != 204:
+            if resp.status_code == 401:
+                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                         resp.json()['errorMessage']['code'])
+            else:
+                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
+    def _delete_gfycat_title(self, _id):
+        resp = self.session.delete(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}/title', auth=self.bearer_auth)
+
+        if resp.status_code != 204:
+            if resp.status_code == 401:
+                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                         resp.json()['errorMessage']['code'])
+            else:
+                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
+    def _delete_gfycat(self, _id):
+        resp = self.session.delete(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}', auth=self.bearer_auth)
+
+        if resp.status_code != 204:
+            if resp.status_code == 401:
+                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
+                                         resp.json()['errorMessage']['code'])
+            else:
+                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
