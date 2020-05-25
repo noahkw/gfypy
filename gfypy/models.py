@@ -1,5 +1,6 @@
-class Gfy:
+class Gfy(dict):
     def __init__(self, **kwargs):
+        super().__init__(self, **kwargs)
         self.tags = kwargs['tags']
         self.languageCategories = kwargs['languageCategories']
         self.domainWhitelist = kwargs['domainWhitelist']
