@@ -1,13 +1,12 @@
 class Gfy(dict):
     PROPERTIES = ['title', 'tags', 'languageCategories', 'domainWhitelist', 'geoWhitelist', 'published', 'nsfw',
-                  'gatekeeper',
-                  'mp4Url', 'gifUrl', 'webmUrl', 'webpUrl', 'mobileUrl', 'mobilePosterUrl', 'thumb100PosterUrl',
-                  'miniUrl', 'gif100px', 'miniPosterUrl', 'max5mbGif', 'max2mbGif', 'max1mbGif', 'posterUrl',
-                  'views', 'description', 'hasTransparency', 'hasAudio', 'gfyId', 'gfyName', 'avgColor', 'width',
-                  'height', 'frameRate', 'numFrames', 'mp4Size', 'webmSize', 'createDate', 'source']
+                  'gatekeeper', 'mp4Url', 'gifUrl', 'webmUrl', 'webpUrl', 'mobileUrl', 'mobilePosterUrl',
+                  'thumb100PosterUrl', 'miniUrl', 'gif100px', 'miniPosterUrl', 'max5mbGif', 'max2mbGif', 'max1mbGif',
+                  'posterUrl', 'views', 'description', 'hasTransparency', 'hasAudio', 'gfyId', 'gfyName', 'avgColor',
+                  'width', 'height', 'frameRate', 'numFrames', 'mp4Size', 'webmSize', 'createDate', 'source']
 
     INT_PROPERTIES = ['likes', 'dislikes', 'gfyNumber']
-    OPTIONAL_PROPERTIES = ['gfySlug', 'md5']
+    OPTIONAL_PROPERTIES = ['gfySlug', 'md5', 'rating']
 
     def __init__(self, client, **kwargs):
         super().__init__()
