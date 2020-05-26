@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import requests
 
 from gfypy.exceptions import GfypyApiException, GfypyAuthException
-from gfypy.models import Gfy
+from gfypy.models import Gfy, User
 
 
 class BearerAuth(requests.auth.AuthBase):
@@ -44,6 +44,7 @@ class Gfypy:
     USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
     ME_ENDPOINT = 'https://api.gfycat.com/v1/me'
     UPLOAD_STATUS_ENDPOINT = 'https://api.gfycat.com/v1/gfycats/fetch/status'
+    USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
 
     def __init__(self, client_id, client_secret, auth_file_path):
         self.client_id = client_id
@@ -317,3 +318,11 @@ class Gfypy:
                                          resp.json()['errorMessage']['code'])
             else:
                 raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
+    def get_user(self, _id):
+        resp = self.session.get(f'{Gfypy.USERS_ENDPOINT}/{_id}', auth=self.bearer_auth)
+
+        if resp.status_code != 200:
+            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+
+        return User.from_dict(self, resp.json())
