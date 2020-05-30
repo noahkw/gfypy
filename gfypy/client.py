@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 import requests
 
-from gfypy.exceptions import GfypyApiException, GfypyAuthException
-from gfypy.models import Gfy, User
+from gfypy import GfypyApiException, GfypyAuthException
+from gfypy import Gfy, User
 
 
 class BearerAuth(requests.auth.AuthBase):
