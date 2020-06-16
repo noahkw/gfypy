@@ -29,12 +29,12 @@ class Gfy(dict):
             self[p] = source[p] if p in source else None
 
     @staticmethod
-    def from_dict(client, source):
-        return Gfy(client, **source)
+    def from_dict(http, source):
+        return Gfy(http, **source)
 
     @staticmethod
-    def from_dict_list(client, source):
-        return [Gfy.from_dict(client, gfy) for gfy in source]
+    def from_dict_list(http, source):
+        return [Gfy.from_dict(http, gfy) for gfy in source]
 
     def _refetch(self):
         resp = self._http.request(Route('GET', '/gfycats/{id}', id=self['gfyId']))
