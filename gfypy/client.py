@@ -4,21 +4,14 @@ import webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from threading import Thread
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
-import requests
+from tqdm import tqdm
 
-from .exceptions import GfypyApiException, GfypyAuthException
-from .models import Gfy, User
-
-
-class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, r):
-        r.headers["authorization"] = "Bearer " + self.token
-        return r
+from .exceptions import GfypyAuthException
+from .gfy import Gfy
+from .http import HttpClient, Route, CustomRoute
+from .user import User
 
 
 class AuthCallbackRequestHandler(SimpleHTTPRequestHandler):
@@ -36,38 +29,33 @@ class AuthCallbackRequestHandler(SimpleHTTPRequestHandler):
 
 class Gfypy:
     GFYCAT_URL = 'https://gfycat.com'
-    AUTH_ENDPOINT = 'https://gfycat.com/oauth/authorize'
-    ACCESS_TOKEN_ENDPOINT = 'https://api.gfycat.com/v1/oauth/token'
-    REDIRECT_URI = 'http://localhost:8000/callback'
-    GFYCATS_ENDPOINT = 'https://api.gfycat.com/v1/gfycats'
     FILEDROP_ENDPOINT = 'https://filedrop.gfycat.com/'
-    USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
-    ME_ENDPOINT = 'https://api.gfycat.com/v1/me'
-    UPLOAD_STATUS_ENDPOINT = 'https://api.gfycat.com/v1/gfycats/fetch/status'
-    USERS_ENDPOINT = 'https://api.gfycat.com/v1/users'
+    AUTH_ENDPOINT = 'https://gfycat.com/oauth/authorize'
+
+    REDIRECT_URI = 'http://localhost:8000/callback'
 
     def __init__(self, client_id, client_secret, auth_file_path):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.auth_file_path = Path(auth_file_path)
-        self.bearer_auth = None
-        self.auth = {
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._auth_file_path = Path(auth_file_path)
+        self._auth = {
             'access_token': None,
             'expires_in': None,
             'refresh_token': None,
             'refresh_token_expires_in': None,
             'resource_owner': None
         }
-        self.session = requests.Session()
+        self._http = HttpClient()
 
     def authenticate(self):
-        if not self.auth_file_path.is_file():
-            print(f'Credentials file "{self.auth_file_path}" does not exist. Creating it now.')
-            with open(self.auth_file_path, 'w') as auth_file:
-                auth_file.write(json.dumps(self.auth))
+        if not self._auth_file_path.is_file():
+            print(f'Credentials file "{self._auth_file_path}" does not exist. Creating it now.')
+            with open(self._auth_file_path, 'w') as auth_file:
+                auth_file.write(json.dumps(self._auth))
 
-        with open(self.auth_file_path, 'r') as auth_file:
-            self.auth = json.loads(auth_file.read())
+        with open(self._auth_file_path, 'r') as auth_file:
+            self._auth = json.loads(auth_file.read())
+
             try:
                 self._refresh_oauth_token()
             except GfypyAuthException as e:
@@ -90,11 +78,16 @@ class Gfypy:
         server_thread.daemon = False
         server_thread.start()
 
-        auth_url = f'{Gfypy.AUTH_ENDPOINT}?client_id={self.client_id}' \
-                   f'&scope=all' \
-                   f'&state=Gfypy' \
-                   f'&response_type=code' \
-                   f'&redirect_uri={Gfypy.REDIRECT_URI}'
+        params = {
+            'client_id': self._client_id,
+            'scope': 'all',
+            'state': 'Gfypy',
+            'response_type': 'code',
+            'redirect_uri': self.REDIRECT_URI
+        }
+
+        auth_url = f'{Gfypy.AUTH_ENDPOINT}?{urlencode(params)}'
+
         webbrowser.open(auth_url)
 
         while server.code is None:
@@ -109,43 +102,35 @@ class Gfypy:
     def _get_oauth_token(self, code):
         payload = {
             'code': code,
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
+            'client_id': self._client_id,
+            'client_secret': self._client_secret,
             'grant_type': 'authorization_code',
             'redirect_uri': Gfypy.REDIRECT_URI
         }
 
-        resp = self.session.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
-                                 headers={'content-type': 'application/json'})
+        resp = self._http.request(Route('POST', '/oauth/token'), data=json.dumps(payload),
+                                  headers={'content-type': 'application/json'})
 
-        if resp.status_code != 200:
-            raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                     resp.json()['errorMessage']['code'])
-
-        self.auth = resp.json()
-        self.bearer_auth = BearerAuth(resp.json()['access_token'])
+        self._auth = resp
+        self._http.auth = resp['access_token']
 
     def _refresh_oauth_token(self):
         payload = {
-            'refresh_token': self.auth['refresh_token'],
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
+            'refresh_token': self._auth['refresh_token'],
+            'client_id': self._client_id,
+            'client_secret': self._client_secret,
             'grant_type': 'refresh',
         }
 
-        resp = self.session.post(Gfypy.ACCESS_TOKEN_ENDPOINT, data=json.dumps(payload),
-                                 headers={'content-type': 'application/json'})
+        resp = self._http.request(Route('POST', '/oauth/token'), data=json.dumps(payload),
+                                  headers={'content-type': 'application/json'})
 
-        if resp.status_code != 200:
-            raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                     resp.json()['errorMessage']['code'])
-
-        self.auth = resp.json()
-        self.bearer_auth = BearerAuth(resp.json()['access_token'])
+        self._auth = resp
+        self._http.auth = resp['access_token']
 
     def _auth_to_disk(self):
-        with open(self.auth_file_path, 'w') as auth_file:
-            auth_file.write(json.dumps(self.auth))
+        with open(self._auth_file_path, 'w') as auth_file:
+            auth_file.write(json.dumps(self._auth))
 
     def _get_key(self, title='', tags=[], keep_audio=True, check_duplicate=False):
         payload = {
@@ -155,13 +140,10 @@ class Gfypy:
             'noMd5': not check_duplicate
         }
 
-        resp = self.session.post(Gfypy.GFYCATS_ENDPOINT, data=json.dumps(payload),
-                                 auth=self.bearer_auth, headers={'content-type': 'application/json'})
+        resp = self._http.request(Route('POST', '/gfycats'), data=json.dumps(payload),
+                                  headers={'content-type': 'application/json'})
 
-        if resp.status_code != 200:
-            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-        return resp.json()['gfyname']
+        return resp['gfyname']
 
     def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
         """
@@ -181,11 +163,7 @@ class Gfypy:
             'file': (key, open(filename, 'rb').read())
         }
 
-        resp = self.session.post(Gfypy.FILEDROP_ENDPOINT, data=payload, files=files)
-
-        if resp.status_code != 204:
-            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
+        self._http.request(CustomRoute('POST', self.FILEDROP_ENDPOINT), data=payload, files=files)
         status = self._check_upload_status(key)
 
         while status['task'] != 'complete':
@@ -199,39 +177,38 @@ class Gfypy:
         return gfy
 
     def _check_upload_status(self, gfy_key):
-        resp = self.session.get(f'{Gfypy.UPLOAD_STATUS_ENDPOINT}/{gfy_key}', auth=self.bearer_auth)
+        resp = self._http.request(Route('GET', '/gfycats/fetch/status/{gfy_key}', gfy_key=gfy_key))
+        return resp
 
-        if resp.status_code != 200:
-            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+    def get_user_feed(self, user_id=None, limit=20, sort_by=None, desc=True, filter_predicate=None):
+        if limit % 100 != 0:
+            print(f'Limit needs to be divisible by 100. Rounding up.')
 
-        return resp.json()
-
-    def get_user_feed(self, user_id, limit=20, sort_by=None, desc=True, filter_predicate=None):
-        if limit % 10 != 0:
-            print(f'Limit needs to be divisible by 10. Rounding up.')
-
-        request_url = f'{Gfypy.USERS_ENDPOINT}/{user_id}/gfycats'
         gfycats = []
-
         i = 0
         cursor = ''
-        while i < limit:
-            resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
 
-            if resp.status_code != 200:
-                if resp.status_code == 401:
-                    raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                             resp.json()['errorMessage']['code'])
-                else:
-                    raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+        if user_id is None:
+            route = Route('GET', '/me/gfycats')
+        else:
+            route = Route('GET', '/users/{id}/gfycats', id=user_id)
 
-            cursor = resp.json()['cursor']
-            gfycats.extend(Gfy.from_dict_list(self, resp.json()['gfycats']))
+        progress = tqdm(total=limit)
+
+        while i < limit or limit < 0:
+            resp = self._http.request(route, params={'count': 100, 'cursor': cursor})
+
+            cursor = resp['cursor']
+            new_gfys = Gfy.from_dict_list(self._http, resp['gfycats'])
+            gfycats.extend(new_gfys)
+            progress.update(len(new_gfys))
+
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
             i = len(gfycats)
-            print(i)
+
+        progress.close()
 
         if filter_predicate:
             gfycats = [g for g in gfycats if filter_predicate(g)]
@@ -242,87 +219,12 @@ class Gfypy:
         return gfycats
 
     def get_own_feed(self, limit=20, sort_by=None, desc=True, filter_predicate=None):
-        if limit % 10 != 0:
-            print(f'Limit needs to be divisible by 10. Rounding up.')
-
-        request_url = f'{Gfypy.ME_ENDPOINT}/gfycats'
-        gfycats = []
-
-        i = 0
-        cursor = ''
-        while i < limit:
-            resp = self.session.get(f'{request_url}?count=100&cursor={cursor}', auth=self.bearer_auth)
-
-            if resp.status_code != 200:
-                if resp.status_code == 401:
-                    raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                             resp.json()['errorMessage']['code'])
-                else:
-                    raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-            cursor = resp.json()['cursor']
-            gfycats.extend(Gfy.from_dict_list(self, resp.json()['gfycats']))
-            if i == len(gfycats):
-                print('Got no new entries from Gfycat. Stopping here.')
-                break
-            i = len(gfycats)
-            print(i)
-
-        if filter_predicate:
-            gfycats = [g for g in gfycats if filter_predicate(g)]
-
-        if sort_by:
-            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
-
-        return gfycats
+        return self.get_user_feed(limit=limit, sort_by=sort_by, desc=desc, filter_predicate=filter_predicate)
 
     def get_gfycat(self, _id):
-        resp = self.session.get(f'{Gfypy.GFYCATS_ENDPOINT}/{_id}', auth=self.bearer_auth)
-
-        if resp.status_code != 200:
-            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-        return Gfy.from_dict(self, resp.json()['gfyItem'])
-
-    def _set_gfycat_title(self, _id, new_title):
-        payload = {
-            'value': new_title
-        }
-
-        resp = self.session.put(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}/title', auth=self.bearer_auth,
-                                data=json.dumps(payload))
-
-        if resp.status_code != 204:
-            if resp.status_code == 401:
-                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                         resp.json()['errorMessage']['code'])
-            else:
-                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-    def _delete_gfycat_title(self, _id):
-        resp = self.session.delete(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}/title', auth=self.bearer_auth)
-
-        if resp.status_code != 204:
-            if resp.status_code == 401:
-                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                         resp.json()['errorMessage']['code'])
-            else:
-                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-    def _delete_gfycat(self, _id):
-        resp = self.session.delete(f'{Gfypy.ME_ENDPOINT}/gfycats/{_id}', auth=self.bearer_auth)
-
-        if resp.status_code != 204:
-            if resp.status_code == 401:
-                raise GfypyAuthException(resp.json()['errorMessage']['description'], resp.status_code,
-                                         resp.json()['errorMessage']['code'])
-            else:
-                raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
+        resp = self._http.request(Route('GET', '/gfycats/{id}', id=_id))
+        return Gfy.from_dict(self._http, resp['gfyItem'])
 
     def get_user(self, _id):
-        resp = self.session.get(f'{Gfypy.USERS_ENDPOINT}/{_id}', auth=self.bearer_auth)
-
-        if resp.status_code != 200:
-            raise GfypyApiException(resp.json()['errorMessage'], resp.status_code)
-
-        return User.from_dict(self, resp.json())
+        resp = self._http.request(Route('GET', '/users/{id}', id=_id))
+        return User.from_dict(self._http, resp)

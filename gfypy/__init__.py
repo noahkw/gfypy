@@ -1,4 +1,5 @@
 from .client import *
 from .exceptions import *
+from .gfy import *
 from .helpers import *
-from .models import *
+from .user import *

@@ -1,3 +1,8 @@
+import json
+
+from .http import Route
+
+
 class Gfy(dict):
     PROPERTIES = ['title', 'tags', 'languageCategories', 'domainWhitelist', 'geoWhitelist', 'published', 'nsfw',
                   'gatekeeper', 'mp4Url', 'gifUrl', 'webmUrl', 'webpUrl', 'mobileUrl', 'mobilePosterUrl',
@@ -8,10 +13,10 @@ class Gfy(dict):
     INT_PROPERTIES = ['likes', 'dislikes', 'gfyNumber']
     OPTIONAL_PROPERTIES = ['gfySlug', 'md5', 'rating']
 
-    def __init__(self, client, **kwargs):
+    def __init__(self, http, **kwargs):
         super().__init__()
         self._copy_properties(kwargs)
-        self.client = client
+        self._http = http
 
     def _copy_properties(self, source):
         for p in Gfy.PROPERTIES:
@@ -32,35 +37,22 @@ class Gfy(dict):
         return [Gfy.from_dict(client, gfy) for gfy in source]
 
     def _refetch(self):
-        refetched_gfy = self.client.get_gfycat(self['gfyId'])
+        resp = self._http.request(Route('GET', '/gfycats/{id}', id=self['gfyId']))
+        refetched_gfy = self.from_dict(self._http, resp['gfyItem'])
         self._copy_properties(refetched_gfy)
 
     def set_title(self, new_title):
-        self.client._set_gfycat_title(self['gfyId'], new_title)
+        payload = {
+            'value': new_title
+        }
+
+        self._http.request(Route('PUT', '/me/gfycats/{id}/title', id=self['gfyId']), data=json.dumps(payload))
         self._refetch()
 
     def delete_title(self):
-        self.client._delete_gfycat_title(self['gfyId'])
+        self._http.request(Route('DELETE', '/me/gfycats/{id}/title', id=self['gfyId']))
         self._refetch()
 
     def delete(self):
-        self.client._delete_gfycat(self['gfyId'])
+        self._http.request(Route('DELETE', '/me/gfycats/{id}', id=self['gfyId']))
         self._refetch()
-
-
-class User(dict):
-    PROPERTIES = ['views', 'verified', 'iframeProfileImageVisible', 'url', 'userid', 'username', 'following',
-                  'followers', 'description', 'profileImageUrl', 'name', 'publishedGfycats', 'createDate']
-
-    def __init__(self, client, **kwargs):
-        super().__init__()
-        self._copy_properties(kwargs)
-        self.client = client
-
-    def _copy_properties(self, source):
-        for p in User.PROPERTIES:
-            self[p] = source[p]
-
-    @staticmethod
-    def from_dict(client, source):
-        return User(client, **source)
