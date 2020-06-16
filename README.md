@@ -13,7 +13,7 @@ Or install the latest development version from source:
 Request API credentials at https://developers.gfycat.com/signup/#/apiform. Make sure to add `http://localhost:8000` as a redirect URI or the OAuth authentication will fail.
 
 ```python
-from gfypy.client import Gfypy
+from gfypy import Gfypy
 
 gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, './creds.json')
 gfypy.authenticate()
