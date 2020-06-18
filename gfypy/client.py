@@ -229,3 +229,17 @@ class Gfypy:
         resp = self._http.request(Route('GET', '/users/{id}', id=_id))
         # Gfycat returns the wrong content type here. Thus, we need to parse the string explicitly.
         return User.from_dict(self._http, json.loads(resp))
+
+    def get_followers(self, fetch_userdata=False):
+        resp = self._http.request(Route('GET', '/me/followers'))
+
+        if not fetch_userdata:
+            return resp['followers']
+        else:
+            users = []
+            for follower in resp['followers']:
+                user = self.get_user(follower['follower_id'])
+                user['follow_date'] = follower['follow_date']
+                users.append(user)
+
+            return users

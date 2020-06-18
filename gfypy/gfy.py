@@ -19,13 +19,13 @@ class Gfy(dict):
         self._http = http
 
     def _copy_properties(self, source):
-        for p in Gfy.PROPERTIES:
+        for p in self.PROPERTIES:
             self[p] = source[p]
 
-        for p in Gfy.INT_PROPERTIES:
+        for p in self.INT_PROPERTIES:
             self[p] = int(source[p])
 
-        for p in Gfy.OPTIONAL_PROPERTIES:
+        for p in self.OPTIONAL_PROPERTIES:
             self[p] = source[p] if p in source else None
 
     @staticmethod
