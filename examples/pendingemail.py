@@ -1,8 +1,8 @@
 import time
 
 from conf import CLIENT_ID, CLIENT_SECRET
-from gfypy.client import Gfypy
-from gfypy.helpers import is_pending
+from gfypy import Gfypy
+from gfypy import is_pending
 
 
 def pending_check():

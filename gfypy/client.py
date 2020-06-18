@@ -6,7 +6,9 @@ from pathlib import Path
 from threading import Thread
 from urllib.parse import urlparse, urlencode
 
-from .exceptions import GfypyAuthException
+from tqdm import tqdm
+
+from .exceptions import GfypyAuthException, GfypyException
 from .gfy import Gfy
 from .http import HttpClient
 from .route import Route, CustomRoute
@@ -24,6 +26,9 @@ class AuthCallbackRequestHandler(SimpleHTTPRequestHandler):
         query_components = dict(qc.split('=') for qc in query.split('&'))
         code = query_components['code']
         self.server.code = code
+
+
+MAX_TAGS = 20
 
 
 class Gfypy:
@@ -132,6 +137,9 @@ class Gfypy:
             auth_file.write(json.dumps(self._auth))
 
     def _get_key(self, title='', tags=[], keep_audio=True, check_duplicate=False):
+        if len(tags) > MAX_TAGS:
+            raise GfypyException(f'Too many tags. Supplied {len(tags)}, max. {MAX_TAGS}.')
+
         payload = {
             'title': title,
             'tags': tags,
