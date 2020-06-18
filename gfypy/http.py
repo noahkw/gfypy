@@ -1,32 +1,9 @@
-from urllib.parse import quote
-
 import requests
+from tqdm import tqdm
 
 from .exceptions import GfypyAuthException, GfypyApiException
-
-
-class Route:
-    BASE = 'https://api.gfycat.com/v1'
-
-    def __init__(self, method, path, **parameters):
-        self.method = method
-        self.path = path
-        url = self.BASE + self.path
-        if parameters:
-            self.url = url.format(**{k: quote(v) if isinstance(v, str) else v for k, v in parameters.items()})
-        else:
-            self.url = url
-
-
-class CustomRoute:
-    def __init__(self, method, base, path=None):
-        self.method = method
-        self.base = base
-        self.path = path
-        if path is not None:
-            self.url = self.base + self.path
-        else:
-            self.url = self.base
+from .gfy import Gfy
+from .route import Route
 
 
 class BearerAuth(requests.auth.AuthBase):
@@ -76,3 +53,41 @@ class HttpClient:
     @auth.setter
     def auth(self, token):
         self._auth = BearerAuth(token)
+
+    def get_user_feed(self, user_id=None, limit=20, sort_by=None, desc=True, filter_predicate=None):
+        if limit % 100 != 0:
+            print(f'Limit needs to be divisible by 100. Rounding up.')
+
+        gfycats = []
+        i = 0
+        cursor = ''
+
+        if user_id is None:
+            route = Route('GET', '/me/gfycats')
+        else:
+            route = Route('GET', '/users/{id}/gfycats', id=user_id)
+
+        progress = tqdm(total=limit)
+
+        while i < limit or limit < 0:
+            resp = self.request(route, params={'count': 100, 'cursor': cursor})
+
+            cursor = resp['cursor']
+            new_gfys = Gfy.from_dict_list(self, resp['gfycats'])
+            gfycats.extend(new_gfys)
+            progress.update(len(new_gfys))
+
+            if i == len(gfycats):
+                print('Got no new entries from Gfycat. Stopping here.')
+                break
+            i = len(gfycats)
+
+        progress.close()
+
+        if filter_predicate:
+            gfycats = [g for g in gfycats if filter_predicate(g)]
+
+        if sort_by:
+            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
+
+        return gfycats

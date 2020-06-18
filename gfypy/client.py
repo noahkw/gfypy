@@ -6,11 +6,10 @@ from pathlib import Path
 from threading import Thread
 from urllib.parse import urlparse, urlencode
 
-from tqdm import tqdm
-
 from .exceptions import GfypyAuthException
 from .gfy import Gfy
-from .http import HttpClient, Route, CustomRoute
+from .http import HttpClient
+from .route import Route, CustomRoute
 from .user import User
 
 
@@ -180,46 +179,11 @@ class Gfypy:
         resp = self._http.request(Route('GET', '/gfycats/fetch/status/{gfy_key}', gfy_key=gfy_key))
         return resp
 
-    def get_user_feed(self, user_id=None, limit=20, sort_by=None, desc=True, filter_predicate=None):
-        if limit % 100 != 0:
-            print(f'Limit needs to be divisible by 100. Rounding up.')
+    def get_user_feed(self, user_id, **kwargs):
+        return self._http.get_user_feed(user_id=user_id, **kwargs)
 
-        gfycats = []
-        i = 0
-        cursor = ''
-
-        if user_id is None:
-            route = Route('GET', '/me/gfycats')
-        else:
-            route = Route('GET', '/users/{id}/gfycats', id=user_id)
-
-        progress = tqdm(total=limit)
-
-        while i < limit or limit < 0:
-            resp = self._http.request(route, params={'count': 100, 'cursor': cursor})
-
-            cursor = resp['cursor']
-            new_gfys = Gfy.from_dict_list(self._http, resp['gfycats'])
-            gfycats.extend(new_gfys)
-            progress.update(len(new_gfys))
-
-            if i == len(gfycats):
-                print('Got no new entries from Gfycat. Stopping here.')
-                break
-            i = len(gfycats)
-
-        progress.close()
-
-        if filter_predicate:
-            gfycats = [g for g in gfycats if filter_predicate(g)]
-
-        if sort_by:
-            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
-
-        return gfycats
-
-    def get_own_feed(self, limit=20, sort_by=None, desc=True, filter_predicate=None):
-        return self.get_user_feed(limit=limit, sort_by=sort_by, desc=desc, filter_predicate=filter_predicate)
+    def get_own_feed(self, **kwargs):
+        return self._http.get_user_feed(**kwargs)
 
     def get_gfycat(self, _id):
         resp = self._http.request(Route('GET', '/gfycats/{id}', id=_id))
@@ -229,6 +193,10 @@ class Gfypy:
         resp = self._http.request(Route('GET', '/users/{id}', id=_id))
         # Gfycat returns the wrong content type here. Thus, we need to parse the string explicitly.
         return User.from_dict(self._http, json.loads(resp))
+
+    def get_me(self):
+        resp = self._http.request(Route('GET', '/me'))
+        return User.from_dict(self._http, resp)
 
     def get_followers(self, fetch_userdata=False):
         resp = self._http.request(Route('GET', '/me/followers'))

@@ -1,6 +1,6 @@
 import json
 
-from .http import Route
+from .route import Route
 
 
 class Gfy(dict):
