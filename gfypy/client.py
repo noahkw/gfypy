@@ -227,4 +227,5 @@ class Gfypy:
 
     def get_user(self, _id):
         resp = self._http.request(Route('GET', '/users/{id}', id=_id))
-        return User.from_dict(self._http, resp)
+        # Gfycat returns the wrong content type here. Thus, we need to parse the string explicitly.
+        return User.from_dict(self._http, json.loads(resp))

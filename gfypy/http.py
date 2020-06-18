@@ -56,7 +56,7 @@ class HttpClient:
         if content_type == 'application/json':
             content = resp.json()
         else:
-            content = resp
+            content = resp.text
 
         if 200 <= resp.status_code < 300:
             return content
