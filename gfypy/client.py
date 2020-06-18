@@ -163,7 +163,7 @@ class Gfypy:
             'file': (key, open(filename, 'rb').read())
         }
 
-        self._http.request(CustomRoute('POST', self.FILEDROP_ENDPOINT), data=payload, files=files)
+        self._http.request(CustomRoute('POST', self.FILEDROP_ENDPOINT), data=payload, files=files, no_auth=True)
         status = self._check_upload_status(key)
 
         while status['task'] != 'complete':

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='gfypy',
-    version='0.0.3',
+    version='0.0.4',
     description='Python wrapper for the Gfycat API',
     long_description='Provides an easy to use interface to the API at '
                      'https://developers.gfycat.com/api/.',
@@ -30,5 +30,5 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     keywords=['gfycat api wrapper'],
-    packages=find_packages(), install_requires=['requests']
+    packages=find_packages(), install_requires=['requests', 'tqdm']
 )

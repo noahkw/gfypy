@@ -44,7 +44,9 @@ class HttpClient:
         self._auth = None
 
     def request(self, route, **kwargs):
-        if self._auth is not None:
+        no_auth = kwargs.pop('no_auth') if 'no_auth' in kwargs else False
+
+        if self._auth is not None and not no_auth:
             resp = self._session.request(route.method, route.url, **kwargs, auth=self._auth)
         else:
             resp = self._session.request(route.method, route.url, **kwargs)
