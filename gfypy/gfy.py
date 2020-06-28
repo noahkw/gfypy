@@ -7,11 +7,11 @@ class Gfy(dict):
     PROPERTIES = ['title', 'tags', 'languageCategories', 'domainWhitelist', 'geoWhitelist', 'published', 'nsfw',
                   'gatekeeper', 'mp4Url', 'gifUrl', 'webmUrl', 'webpUrl', 'mobileUrl', 'mobilePosterUrl',
                   'thumb100PosterUrl', 'miniUrl', 'gif100px', 'miniPosterUrl', 'max5mbGif', 'max2mbGif', 'max1mbGif',
-                  'posterUrl', 'views', 'description', 'hasTransparency', 'hasAudio', 'gfyId', 'gfyName', 'avgColor',
+                  'posterUrl', 'views', 'description', 'hasTransparency', 'hasAudio', 'gfyId', 'gfyName',
                   'width', 'height', 'frameRate', 'numFrames', 'mp4Size', 'webmSize', 'createDate', 'source']
 
     INT_PROPERTIES = ['likes', 'dislikes', 'gfyNumber']
-    OPTIONAL_PROPERTIES = ['gfySlug', 'md5', 'rating']
+    OPTIONAL_PROPERTIES = ['gfySlug', 'md5', 'rating', 'avgColor']
 
     def __init__(self, http, **kwargs):
         super().__init__()

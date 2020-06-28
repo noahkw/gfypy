@@ -6,8 +6,6 @@ from pathlib import Path
 from threading import Thread
 from urllib.parse import urlparse, urlencode
 
-from tqdm import tqdm
-
 from .exceptions import GfypyAuthException, GfypyException
 from .gfy import Gfy
 from .http import HttpClient
