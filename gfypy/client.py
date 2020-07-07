@@ -6,6 +6,8 @@ from pathlib import Path
 from threading import Thread
 from urllib.parse import urlparse, urlencode
 
+from tqdm import tqdm
+
 from .exceptions import GfypyAuthException, GfypyException
 from .gfy import Gfy
 from .http import HttpClient
@@ -27,6 +29,7 @@ class AuthCallbackRequestHandler(SimpleHTTPRequestHandler):
 
 
 MAX_TAGS = 20
+MAX_CHECKS = 30
 
 
 class Gfypy:
@@ -171,14 +174,21 @@ class Gfypy:
         self._http.request(CustomRoute('POST', self.FILEDROP_ENDPOINT), data=payload, files=files, no_auth=True)
         status = self._check_upload_status(key)
 
+        progress = tqdm(total=MAX_CHECKS)
+        num_checks = 0
         while status['task'] != 'complete':
-            time.sleep(3)
+            if num_checks > MAX_CHECKS:
+                # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
+                break
             status = self._check_upload_status(key)
-            print(status)
+            progress.update(1)
+            num_checks += 1
+            time.sleep(3)
 
-        print(f'{filename} has been uploaded as {Gfypy.GFYCAT_URL}/{key}.')
-
+        progress.close()
         gfy = self.get_gfycat(key)
+        print(f'\n{filename} has been uploaded as {Gfypy.GFYCAT_URL}/{key}.')
+
         return gfy
 
     def _check_upload_status(self, gfy_key):
