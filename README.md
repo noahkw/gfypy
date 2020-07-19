@@ -29,7 +29,7 @@ gfypy.upload_from_file(f'test_video.webm', title='This is a test video. Don\'t u
 ## Upload script usage
 
 ```bash
-python uploader.py conf.ini \
+gfy-uploader conf.ini \
                    file-1.webm file-2.webm \
                    --tags section1 newvideo \
                    --extra-tags "funny video" lol
@@ -39,7 +39,7 @@ python uploader.py conf.ini \
 
 `--sort`    `-s`: Sort titles by the suffix after "-".
 
-A sample `conf.ini` can be found here: https://github.com/noahkw/gfypy/blob/master/examples/conf.ini.sample.
+A sample `conf.ini` can be found here: https://github.com/noahkw/gfypy/blob/master/bin/conf.ini.sample.
 
 Each section's tags defined under `tags` may be added using `--tags <section>`. 
 Additional tags are added via `--extra-tags`. The title is generated from the filename by 
