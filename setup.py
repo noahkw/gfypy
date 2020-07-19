@@ -30,5 +30,9 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     keywords=['gfycat api wrapper'],
-    packages=find_packages(), install_requires=['requests', 'tqdm']
+    packages=find_packages(),
+    install_requires=['requests', 'tqdm'],
+    extras_require={
+        'async': ['aiohttp']
+    }
 )

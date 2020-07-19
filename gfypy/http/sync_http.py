@@ -1,9 +1,10 @@
 import requests
 from tqdm import tqdm
 
-from .exceptions import GfypyAuthException, GfypyApiException
-from .gfy import Gfy
-from .route import Route
+from gfypy.exceptions import GfypyAuthException, GfypyApiException
+from gfypy.gfy import Gfy
+from gfypy.http.abstract_http import AbstractHttpClient
+from gfypy.route import Route
 
 
 class BearerAuth(requests.auth.AuthBase):
@@ -15,7 +16,7 @@ class BearerAuth(requests.auth.AuthBase):
         return r
 
 
-class HttpClient:
+class SyncHttpClient(AbstractHttpClient):
     def __init__(self):
         self._session = requests.Session()
         self._auth = None
