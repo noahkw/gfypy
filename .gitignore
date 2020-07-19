@@ -7,3 +7,4 @@ creds*
 build/
 dist/
 *.egg-info
+conf.ini
