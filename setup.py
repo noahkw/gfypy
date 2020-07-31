@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='gfypy',
-    version='0.0.7',
+    version='0.0.8',
     description='Python wrapper for the Gfycat API',
     long_description='Provides an easy to use interface to the API at '
                      'https://developers.gfycat.com/api/.',
@@ -35,4 +35,5 @@ setup(
     extras_require={
         'async': ['aiohttp']
     }
+    scripts=['bin/gfy-uploader']
 )

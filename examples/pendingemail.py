@@ -1,26 +1,29 @@
-import time
+from urllib.parse import urlencode, quote
 
 from conf import CLIENT_ID, CLIENT_SECRET
-from gfypy import Gfypy
-from gfypy import is_pending
+from gfypy import Gfypy, is_pending
+
+GFYCAT_SUPPORT_EMAIL = 'support@gfycat.com'
+SUBJECT = 'Gfys stuck on pending review'
 
 
 def pending_check():
     """
-    go through own feed, write a text file with all gfys stuck on pending
+    go through own feed, create a mailto link with all gfys stuck on pending
     """
-    start = time.time()
-    gfycats = gfypy.get_own_feed(limit=10000, filter_predicate=is_pending)
-    end = time.time()
-    print(f'{end - start}s elapsed')
-    to_send = "Hi,\n\nThese gfys are stuck on pending review\n\n"
+    gfycats = gfypy.get_own_feed(limit=-1, filter_predicate=is_pending)
+    body = "Hi,\n\nThese gfys are stuck on pending review:\n\n"
 
-    for i in range(len(gfycats)):
-        to_send += f"{i + 1} https://www.gfycat.com/{gfycats[i]['gfyId']}\n"
-    to_send += "\nThanks"
+    body += '\n'.join([Gfypy.GFYCAT_URL + '/' + gfy['gfyId'] for gfy in gfycats])
+    body += "\n\nThanks"
 
-    with open('gfycatemail.txt', 'w') as f:
-        f.write(to_send)
+    params = {
+        'subject': SUBJECT,
+        'body': body
+    }
+
+    mailto = f'mailto:{GFYCAT_SUPPORT_EMAIL}?{urlencode(params, quote_via=quote)}'
+    print(mailto)
 
 
 if __name__ == '__main__':
