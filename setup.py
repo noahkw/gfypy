@@ -34,6 +34,6 @@ setup(
     install_requires=['requests', 'tqdm'],
     extras_require={
         'async': ['aiohttp']
-    }
+    },
     scripts=['bin/gfy-uploader']
 )
