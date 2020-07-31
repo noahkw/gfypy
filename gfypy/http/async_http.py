@@ -1,5 +1,4 @@
 import aiohttp
-from tqdm import tqdm
 
 from gfypy.exceptions import GfypyAuthException, GfypyApiException
 from gfypy.gfy import Gfy
@@ -65,22 +64,17 @@ class AsyncHttpClient(AbstractHttpClient):
         else:
             route = Route('GET', '/users/{id}/gfycats', id=user_id)
 
-        progress = tqdm(total=limit)
-
         while i < limit or limit < 0:
             resp = await self.request(route, params={'count': 100, 'cursor': cursor})
 
             cursor = resp['cursor']
             new_gfys = Gfy.from_dict_list(self, resp['gfycats'])
             gfycats.extend(new_gfys)
-            progress.update(len(new_gfys))
 
             if i == len(gfycats):
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
             i = len(gfycats)
-
-        progress.close()
 
         if filter_predicate:
             gfycats = [g for g in gfycats if filter_predicate(g)]
