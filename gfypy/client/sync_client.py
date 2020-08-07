@@ -143,6 +143,6 @@ class Gfypy(AbstractGfypy):
             gfycats = [g for g in gfycats if filter_predicate(g)]
 
         if sort_by:
-            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
+            gfycats = sorted(gfycats, key=lambda gfy: getattr(gfy, sort_by), reverse=desc)
 
         return gfycats
