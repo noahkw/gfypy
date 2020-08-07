@@ -1,14 +1,12 @@
 import asyncio
 import json
 
-from tqdm import tqdm
-
-from gfypy.route import CustomRoute
-
 from gfypy.client.abstract_client import AbstractGfypy
 from gfypy.const import REDIRECT_URI, FILEDROP_ENDPOINT, GFYCAT_URL
 from gfypy.exceptions import GfypyAuthException
+from gfypy.gfy import Gfy
 from gfypy.http import AsyncHttpClient
+from gfypy.route import CustomRoute
 from gfypy.route import Route
 
 
@@ -95,3 +93,47 @@ class AsyncGfypy(AbstractGfypy):
         print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
 
         return gfy
+
+    async def user_feed_generator(self, user_id=None, per_request=100):
+        if not 20 <= per_request <= 100:
+            print(f'Number per request needs to be between 20 and 100.')
+            return
+
+        i = 0
+        cursor = ''
+
+        if user_id is None:
+            route = Route('GET', '/me/gfycats')
+        else:
+            route = Route('GET', '/users/{id}/gfycats', id=user_id)
+
+        while True:
+            resp = await self._http.request(route, params={'count': per_request, 'cursor': cursor})
+
+            cursor = resp['cursor']
+            new_gfys = Gfy.from_dict_list(self, resp['gfycats'])
+            yield new_gfys
+
+            if len(new_gfys) < per_request:
+                print('Got no new entries from Gfycat. Stopping here.')
+                break
+
+    async def get_user_feed(self, user_id=None, limit=100, sort_by=None, desc=True, filter_predicate=None):
+        if limit % 100 != 0 and limit >= 0:
+            print(f'Limit needs to be divisible by 100. Rounding up.')
+
+        gfycats = []
+
+        async for gfy_sublist in self.user_feed_generator(user_id=user_id, per_request=100):
+            gfycats.extend(gfy_sublist)
+
+            if len(gfycats) >= limit >= 0:
+                break
+
+        if filter_predicate:
+            gfycats = [g for g in gfycats if filter_predicate(g)]
+
+        if sort_by:
+            gfycats = sorted(gfycats, key=lambda k: k[sort_by], reverse=desc)
+
+        return gfycats

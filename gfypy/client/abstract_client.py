@@ -120,10 +120,10 @@ class AbstractGfypy:
                                           headers={'content-type': 'application/json'})).then(lambda r: r['gfyname'])
 
     def get_user_feed(self, user_id, **kwargs):
-        return self._http.get_user_feed(user_id=user_id, **kwargs)
+        raise NotImplementedError
 
     def get_own_feed(self, **kwargs):
-        return self._http.get_user_feed(**kwargs)
+        return self.get_user_feed(**kwargs)
 
     def get_gfycat(self, _id):
         return Promise(self._http.request(Route('GET', '/gfycats/{id}', id=_id))).then(
