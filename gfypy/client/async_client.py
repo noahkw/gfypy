@@ -112,7 +112,8 @@ class AsyncGfypy(AbstractGfypy):
 
             cursor = resp['cursor']
             new_gfys = Gfy.from_dict_list(self, resp['gfycats'])
-            yield new_gfys
+            for new_gfy in new_gfys:
+                yield new_gfy
 
             if len(new_gfys) < per_request:
                 print('Got no new entries from Gfycat. Stopping here.')
@@ -124,8 +125,8 @@ class AsyncGfypy(AbstractGfypy):
 
         gfycats = []
 
-        async for gfy_sublist in self.user_feed_generator(user_id=user_id, per_request=100):
-            gfycats.extend(gfy_sublist)
+        async for gfy in self.user_feed_generator(user_id=user_id, per_request=100):
+            gfycats.append(gfy)
 
             if len(gfycats) >= limit >= 0:
                 break
