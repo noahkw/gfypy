@@ -2,6 +2,7 @@ from urllib.parse import urlencode, quote
 
 from conf import CLIENT_ID, CLIENT_SECRET
 from gfypy import Gfypy, is_pending
+from gfypy.const import GFYCAT_URL
 
 GFYCAT_SUPPORT_EMAIL = 'support@gfycat.com'
 SUBJECT = 'Gfys stuck on pending review'
@@ -14,7 +15,7 @@ def pending_check():
     gfycats = gfypy.get_own_feed(limit=-1, filter_predicate=is_pending)
     body = "Hi,\n\nThese gfys are stuck on pending review:\n\n"
 
-    body += '\n'.join([Gfypy.GFYCAT_URL + '/' + gfy['gfyId'] for gfy in gfycats])
+    body += '\n'.join([GFYCAT_URL + '/' + gfy['gfyId'] for gfy in gfycats])
     body += "\n\nThanks"
 
     params = {
