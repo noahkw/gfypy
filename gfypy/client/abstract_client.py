@@ -56,13 +56,6 @@ class AbstractGfypy:
         self._client_id = client_id
         self._client_secret = client_secret
         self._auth_file_path = Path(auth_file_path)
-        self._auth = {
-            'access_token': None,
-            'expires_in': None,
-            'refresh_token': None,
-            'refresh_token_expires_in': None,
-            'resource_owner': None
-        }
 
     def _get_oauth_code(self):
         """
@@ -97,7 +90,7 @@ class AbstractGfypy:
 
     def _auth_to_disk(self):
         with open(self._auth_file_path, 'w') as auth_file:
-            auth_file.write(json.dumps(self._auth))
+            auth_file.write(json.dumps(self._http.creds))
 
     def _check_upload_status(self, gfy_key):
         return self._http.request(Route('GET', '/gfycats/fetch/status/{gfy_key}', gfy_key=gfy_key))
