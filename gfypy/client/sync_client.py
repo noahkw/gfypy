@@ -37,7 +37,7 @@ class Gfypy(AbstractGfypy):
     def _initial_auth(self):
         self._http.get_oauth_token(self._get_oauth_code())
 
-    def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
+    def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False, check_upload=True):
         key = self._get_key(title, tags, keep_audio, check_duplicate)
         payload = {
             'key': key
@@ -47,29 +47,33 @@ class Gfypy(AbstractGfypy):
         }
 
         self._http.request(CustomRoute('POST', FILEDROP_ENDPOINT), data=payload, files=files, no_auth=True)
-        status = self._check_upload_status(key)
 
-        progress = tqdm(total=self.MAX_CHECKS)
-        num_checks = 0
-        while status['task'] != 'complete':
-            if num_checks > self.MAX_CHECKS:
-                # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
-                break
+        if check_upload:
             status = self._check_upload_status(key)
-            progress.update(1)
-            num_checks += 1
-            time.sleep(3)
 
-        progress.close()
+            progress = tqdm(total=self.MAX_CHECKS)
+            num_checks = 0
+            while status['task'] != 'complete':
+                if num_checks > self.MAX_CHECKS:
+                    # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
+                    break
+                status = self._check_upload_status(key)
+                progress.update(1)
+                num_checks += 1
+                time.sleep(3)
 
-        try:
-            gfy = self.get_gfycat(key)
+            progress.close()
 
-            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
-            return gfy
-        except GfypyApiException:
-            print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
-            return None
+            try:
+                gfy = self.get_gfycat(key)
+
+                print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+                return gfy
+            except GfypyApiException:
+                print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+                return None
+        else:
+            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}; checks have been skipped.')
 
     def get_followers(self, fetch_userdata=False):
         resp = self._http.request(Route('GET', '/me/followers'))

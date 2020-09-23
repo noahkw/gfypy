@@ -43,6 +43,8 @@ def main():
                         help='Sorts the files to upload by the suffix after "-".')
     parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
                         help='Asks for the title and tags for each file.')
+    parser.add_argument('--fast', '-f', action='store_true', dest='fast',
+                        help='Skips all upload checks.')
 
     args = parser.parse_args()
 
@@ -87,7 +89,8 @@ def main():
     for uploadable in uploadables:
         print(f'Title: {uploadable.title}; Path: {uploadable.path}; Tags: {uploadable.tags}')
         if not args.dry_run:
-            gfypy.upload_from_file(uploadable.path, title=uploadable.title, tags=uploadable.tags)
+            gfypy.upload_from_file(uploadable.path, title=uploadable.title, tags=uploadable.tags,
+                                   check_upload=not args.fast)
 
 
 if __name__ == '__main__':

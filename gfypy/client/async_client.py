@@ -41,7 +41,7 @@ class AsyncGfypy(AbstractGfypy):
     async def _initial_auth(self):
         await self._http.get_oauth_token(self._get_oauth_code())
 
-    async def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
+    async def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False, check_upload=True):
         key = await self._get_key(title, tags, keep_audio, check_duplicate)
 
         data = FormData()
@@ -50,25 +50,28 @@ class AsyncGfypy(AbstractGfypy):
 
         await self._http.request(CustomRoute('POST', FILEDROP_ENDPOINT), data=data, no_auth=True)
 
-        status = await self._check_upload_status(key)
-
-        num_checks = 0
-        while status['task'] != 'complete':
-            if num_checks > self.MAX_CHECKS:
-                # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
-                break
+        if check_upload:
             status = await self._check_upload_status(key)
-            num_checks += 1
-            await asyncio.sleep(3)
 
-        try:
-            gfy = await self.get_gfycat(key)
+            num_checks = 0
+            while status['task'] != 'complete':
+                if num_checks > self.MAX_CHECKS:
+                    # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
+                    break
+                status = await self._check_upload_status(key)
+                num_checks += 1
+                await asyncio.sleep(3)
 
-            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
-            return gfy
-        except GfypyApiException:
-            print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
-            return None
+            try:
+                gfy = await self.get_gfycat(key)
+
+                print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+                return gfy
+            except GfypyApiException:
+                print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+                return None
+        else:
+            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}; checks have been skipped.')
 
     async def user_feed_generator(self, user_id=None, per_request=100):
         if not 20 <= per_request <= 100:
