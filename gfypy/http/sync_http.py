@@ -32,7 +32,7 @@ class SyncHttpClient(AbstractHttpClient):
         }
 
     def request(self, route, **kwargs):
-        no_auth = kwargs.pop('no_auth') if 'no_auth' in kwargs else False
+        no_auth = kwargs.pop('no_auth', False)
         refresh = kwargs.pop('refresh', True)
 
         if self._auth is not None and not no_auth:
@@ -62,7 +62,7 @@ class SyncHttpClient(AbstractHttpClient):
                     raise GfypyAuthException(content['errorMessage']['description'], resp.status_code,
                                              content['errorMessage']['code'])
         else:
-            raise GfypyApiException(content['errorMessage'], resp.status_code)
+            raise GfypyApiException(content['errorMessage'] if 'message' in content else content, resp.status_code)
 
     def get_oauth_token(self, code):
         payload = {

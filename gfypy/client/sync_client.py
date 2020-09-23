@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from gfypy.client.abstract_client import AbstractGfypy
 from gfypy.const import GFYCAT_URL, FILEDROP_ENDPOINT
-from gfypy.exceptions import GfypyAuthException
+from gfypy.exceptions import GfypyAuthException, GfypyApiException
 from gfypy.gfy import Gfy
 from gfypy.http import SyncHttpClient
 from gfypy.route import Route, CustomRoute
@@ -61,10 +61,15 @@ class Gfypy(AbstractGfypy):
             time.sleep(3)
 
         progress.close()
-        gfy = self.get_gfycat(key)
-        print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
 
-        return gfy
+        try:
+            gfy = self.get_gfycat(key)
+
+            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+            return gfy
+        except GfypyApiException:
+            print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+            return None
 
     def get_followers(self, fetch_userdata=False):
         resp = self._http.request(Route('GET', '/me/followers'))

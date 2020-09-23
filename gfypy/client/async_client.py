@@ -1,9 +1,11 @@
 import asyncio
 import json
 
+from aiohttp import FormData
+
 from gfypy.client.abstract_client import AbstractGfypy
 from gfypy.const import FILEDROP_ENDPOINT, GFYCAT_URL
-from gfypy.exceptions import GfypyAuthException
+from gfypy.exceptions import GfypyAuthException, GfypyApiException
 from gfypy.gfy import Gfy
 from gfypy.http import AsyncHttpClient
 from gfypy.route import CustomRoute
@@ -41,14 +43,13 @@ class AsyncGfypy(AbstractGfypy):
 
     async def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False):
         key = await self._get_key(title, tags, keep_audio, check_duplicate)
-        payload = {
-            'key': key
-        }
-        files = {
-            'file': (key, open(filename, 'rb').read())
-        }
 
-        await self._http.request(CustomRoute('POST', FILEDROP_ENDPOINT), data=payload, files=files, no_auth=True)
+        data = FormData()
+        data.add_field('key', key)
+        data.add_field('file', open(filename, 'rb'), filename=filename)
+
+        await self._http.request(CustomRoute('POST', FILEDROP_ENDPOINT), data=data, no_auth=True)
+
         status = await self._check_upload_status(key)
 
         num_checks = 0
@@ -60,10 +61,14 @@ class AsyncGfypy(AbstractGfypy):
             num_checks += 1
             await asyncio.sleep(3)
 
-        gfy = await self.get_gfycat(key)
-        print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+        try:
+            gfy = await self.get_gfycat(key)
 
-        return gfy
+            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+            return gfy
+        except GfypyApiException:
+            print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+            return None
 
     async def user_feed_generator(self, user_id=None, per_request=100):
         if not 20 <= per_request <= 100:

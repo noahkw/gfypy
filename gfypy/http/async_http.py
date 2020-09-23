@@ -34,10 +34,11 @@ class AsyncHttpClient(AbstractHttpClient):
         await self._session.close()
 
     async def request(self, route, **kwargs):
-        no_auth = kwargs.pop('no_auth') if 'no_auth' in kwargs else False
+        no_auth = kwargs.pop('no_auth', False)
         refresh = kwargs.pop('refresh', True)
 
-        async with self._session.request(route.method, route.url, **kwargs, auth=self._auth) as resp:
+        async with self._session.request(route.method, route.url, **kwargs,
+                                         auth=self._auth if not no_auth else None) as resp:
             content_type = resp.headers.get('content-type')
             if content_type == 'application/json':
                 content = await resp.json()
@@ -59,7 +60,7 @@ class AsyncHttpClient(AbstractHttpClient):
                         raise GfypyAuthException(content['errorMessage']['description'], resp.status,
                                                  content['errorMessage']['code'])
             else:
-                raise GfypyApiException(content['errorMessage'], resp.status)
+                raise GfypyApiException(content['errorMessage'] if 'message' in content else content, resp.status)
 
     async def get_oauth_token(self, code):
         payload = {
