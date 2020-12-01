@@ -112,9 +112,10 @@ class Gfypy(AbstractGfypy):
             gfycats.extend(new_gfys)
             progress.update(len(new_gfys))
 
-            if i == len(gfycats):
+            if not cursor:
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
+
             i = len(gfycats)
 
         progress.close()

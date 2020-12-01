@@ -94,7 +94,7 @@ class AsyncGfypy(AbstractGfypy):
             for new_gfy in new_gfys:
                 yield new_gfy
 
-            if len(new_gfys) < per_request:
+            if not cursor:
                 print('Got no new entries from Gfycat. Stopping here.')
                 break
 
