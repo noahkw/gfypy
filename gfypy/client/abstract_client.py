@@ -98,7 +98,9 @@ class AbstractGfypy:
     def get_me(self):
         return Promise(self._http.request(Route('GET', '/me'))).then(lambda r: User.from_dict(self._http, r))
 
-    def _get_key(self, title='', tags=[], keep_audio=True, check_duplicate=False):
+    def _get_key(self, title='', tags=None, keep_audio=True, check_duplicate=False):
+        tags = tags or []
+
         if len(tags) > self.MAX_TAGS:
             raise GfypyException(f'Too many tags. Supplied {len(tags)}, max. {self.MAX_TAGS}.')
 

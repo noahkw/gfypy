@@ -25,7 +25,7 @@ def load_sections(specified_sections, sections):
         try:
             section = sections[section]
             tags_.extend(json.loads(section))
-        except KeyError as e:
+        except KeyError:
             raise KeyError(f'{section} was not found in config file.')
     return tags_
 
@@ -52,8 +52,8 @@ def main():
     config.read(args.config, encoding='utf-8')
     credentials = config['credentials']
 
-    tags = args.extra_tags if args.extra_tags else []
-    sections = args.tags if args.tags else []
+    tags = args.extra_tags or []
+    sections = args.tags or []
 
     tags.extend(load_sections(sections, config['tags']))
 

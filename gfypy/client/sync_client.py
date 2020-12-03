@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 
 from tqdm import tqdm
@@ -10,6 +11,8 @@ from gfypy.gfy import Gfy
 from gfypy.http import SyncHttpClient
 from gfypy.route import Route, CustomRoute
 
+logger = logging.getLogger(__name__)
+
 
 class Gfypy(AbstractGfypy):
     def __init__(self, client_id, client_secret, auth_file_path):
@@ -18,7 +21,7 @@ class Gfypy(AbstractGfypy):
 
     def authenticate(self):
         if not self._auth_file_path.is_file():
-            print(f'Credentials file "{self._auth_file_path}" does not exist. Creating it now.')
+            logger.info('Credentials file "%s" does not exist. Creating it now.', self._auth_file_path)
             with open(self._auth_file_path, 'w') as auth_file:
                 auth_file.write(json.dumps(self._http.creds))
 
@@ -67,13 +70,14 @@ class Gfypy(AbstractGfypy):
             try:
                 gfy = self.get_gfycat(key)
 
-                print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+                logger.info('\n%s has been uploaded as %s/%s.', filename, GFYCAT_URL, key)
                 return gfy
             except GfypyApiException:
-                print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+                logger.info('\n%s has probably been uploaded as %s/%s, but the check was unsuccessful.', filename,
+                            GFYCAT_URL, key)
                 return None
         else:
-            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}; checks have been skipped.')
+            logger.info('\n%s has been uploaded as %s/%s; checks have been skipped.', filename, GFYCAT_URL, key)
 
     def get_followers(self, fetch_userdata=False):
         resp = self._http.request(Route('GET', '/me/followers'))

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 
 from aiohttp import FormData
 
@@ -11,6 +12,8 @@ from gfypy.http import AsyncHttpClient
 from gfypy.route import CustomRoute
 from gfypy.route import Route
 
+logger = logging.getLogger(__name__)
+
 
 class AsyncGfypy(AbstractGfypy):
     def __init__(self, client_id, client_secret, auth_file_path):
@@ -19,7 +22,7 @@ class AsyncGfypy(AbstractGfypy):
 
     async def authenticate(self):
         if not self._auth_file_path.is_file():
-            print(f'Credentials file "{self._auth_file_path}" does not exist. Creating it now.')
+            logging.info('Credentials file "%s" does not exist. Creating it now.', self._auth_file_path)
             with open(self._auth_file_path, 'w') as auth_file:
                 auth_file.write(json.dumps(self._http.creds))
 
@@ -41,7 +44,10 @@ class AsyncGfypy(AbstractGfypy):
     async def _initial_auth(self):
         await self._http.get_oauth_token(self._get_oauth_code())
 
-    async def upload_from_file(self, filename, title='', tags=[], keep_audio=True, check_duplicate=False, check_upload=True):
+    async def upload_from_file(self, filename, title='', tags=None, keep_audio=True, check_duplicate=False,
+                               check_upload=True):
+        tags = tags or []
+
         key = await self._get_key(title, tags, keep_audio, check_duplicate)
 
         data = FormData()
@@ -65,18 +71,18 @@ class AsyncGfypy(AbstractGfypy):
             try:
                 gfy = await self.get_gfycat(key)
 
-                print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}.')
+                logger.info('\n%s has been uploaded as %s/%s.', filename, GFYCAT_URL, key)
                 return gfy
             except GfypyApiException:
-                print(f'\n{filename} has probably been uploaded as {GFYCAT_URL}/{key}, but the check was unsuccessful.')
+                logger.info('\n%s has probably been uploaded as %s/%s, but the check was unsuccessful.', filename,
+                            GFYCAT_URL, key)
                 return None
         else:
-            print(f'\n{filename} has been uploaded as {GFYCAT_URL}/{key}; checks have been skipped.')
+            logger.info('\n%s has been uploaded as %s/%s; checks have been skipped.', filename, GFYCAT_URL, key)
 
     async def user_feed_generator(self, user_id=None, per_request=100):
         if not 20 <= per_request <= 100:
-            print(f'Number per request needs to be between 20 and 100.')
-            return
+            raise ValueError('Number per request needs to be between 20 and 100.')
 
         i = 0
         cursor = ''
@@ -95,12 +101,12 @@ class AsyncGfypy(AbstractGfypy):
                 yield new_gfy
 
             if not cursor:
-                print('Got no new entries from Gfycat. Stopping here.')
+                logger.info('Got no new entries from Gfycat. Stopping here.')
                 break
 
     async def get_user_feed(self, user_id=None, limit=100, sort_by=None, desc=True, filter_predicate=None):
         if limit % 100 != 0 and limit >= 0:
-            print(f'Limit needs to be divisible by 100. Rounding up.')
+            logger.warning(f'Limit needs to be divisible by 100. Rounding up.')
 
         gfycats = []
 
