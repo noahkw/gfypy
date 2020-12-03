@@ -1,4 +1,4 @@
-__all__ = ('GfypyException', 'GfypyApiException', 'GfypyAuthException')
+__all__ = ("GfypyException", "GfypyApiException", "GfypyAuthException")
 
 
 class GfypyException(Exception):

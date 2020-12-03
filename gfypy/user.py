@@ -36,31 +36,49 @@ class User(dict):
         self._source = kwargs
 
         # explicit cast to int required because the API sometimes returns a str
-        self.following = int(kwargs.pop('following')) if 'following' in kwargs else None
-        self.followers = int(kwargs.pop('followers')) if 'followers' in kwargs else None
-        self.views = int(kwargs.pop('views')) if 'views' in kwargs else None
-        self.create_date = datetime.fromtimestamp(int(kwargs.pop('createDate'))) if 'createDate' in kwargs else None
-        self.published_gfycats = int(kwargs.pop('publishedGfycats')) if 'publishedGfycats' in kwargs else None
-        self.total_gfycats = int(kwargs.pop('totalGfycats')) if 'totalGfycats' in kwargs else None
-        self.total_bookmarks = int(kwargs.pop('totalBookmarks')) if 'totalBookmarks' in kwargs else None
-        self.total_albums = int(kwargs.pop('totalAlbums')) if 'totalAlbums' in kwargs else None
-        self.published_albums = int(kwargs.pop('publishedAlbums')) if 'publishedAlbums' in kwargs else None
+        self.following = int(kwargs.pop("following")) if "following" in kwargs else None
+        self.followers = int(kwargs.pop("followers")) if "followers" in kwargs else None
+        self.views = int(kwargs.pop("views")) if "views" in kwargs else None
+        self.create_date = (
+            datetime.fromtimestamp(int(kwargs.pop("createDate")))
+            if "createDate" in kwargs
+            else None
+        )
+        self.published_gfycats = (
+            int(kwargs.pop("publishedGfycats"))
+            if "publishedGfycats" in kwargs
+            else None
+        )
+        self.total_gfycats = (
+            int(kwargs.pop("totalGfycats")) if "totalGfycats" in kwargs else None
+        )
+        self.total_bookmarks = (
+            int(kwargs.pop("totalBookmarks")) if "totalBookmarks" in kwargs else None
+        )
+        self.total_albums = (
+            int(kwargs.pop("totalAlbums")) if "totalAlbums" in kwargs else None
+        )
+        self.published_albums = (
+            int(kwargs.pop("publishedAlbums")) if "publishedAlbums" in kwargs else None
+        )
 
-        self.subscription = kwargs.pop('subscription', None)
-        self.verified = kwargs.pop('verified', None)
-        self.iframe_profile_image_visible = kwargs.pop('iframeProfileImageVisible', None)
-        self.url = kwargs.pop('url', None)
-        self.userid = kwargs.pop('userid', None)
-        self.username = kwargs.pop('username', None)
-        self.description = kwargs.pop('description', None)
-        self.name = kwargs.pop('name', None)
-        self.profile_image_url = kwargs.pop('profileImageUrl', None)
-        self.email = kwargs.pop('email', None)
-        self.canonical_username = kwargs.pop('canonicalUsername', None)
-        self.email_verified = kwargs.pop('emailVerified', None)
-        self.viewing_preference = kwargs.pop('viewingPreference', None)
-        self.domain_whitelist = kwargs.pop('domainWhitelist', None)
-        self.geo_whitelist = kwargs.pop('geoWhitelist', None)
+        self.subscription = kwargs.pop("subscription", None)
+        self.verified = kwargs.pop("verified", None)
+        self.iframe_profile_image_visible = kwargs.pop(
+            "iframeProfileImageVisible", None
+        )
+        self.url = kwargs.pop("url", None)
+        self.userid = kwargs.pop("userid", None)
+        self.username = kwargs.pop("username", None)
+        self.description = kwargs.pop("description", None)
+        self.name = kwargs.pop("name", None)
+        self.profile_image_url = kwargs.pop("profileImageUrl", None)
+        self.email = kwargs.pop("email", None)
+        self.canonical_username = kwargs.pop("canonicalUsername", None)
+        self.email_verified = kwargs.pop("emailVerified", None)
+        self.viewing_preference = kwargs.pop("viewingPreference", None)
+        self.domain_whitelist = kwargs.pop("domainWhitelist", None)
+        self.geo_whitelist = kwargs.pop("geoWhitelist", None)
 
     @staticmethod
     def from_dict(http, source):

@@ -1,10 +1,10 @@
 # gfypy ![Python package](https://github.com/noahkw/gfypy/workflows/Python%20package/badge.svg) [![PyPI version](https://badge.fury.io/py/gfypy.svg)](https://badge.fury.io/py/gfypy)
 
-Install the latest release from PyPi: 
+Install the latest release from PyPi:
 
-`python -m pip install gfypy` 
+`python -m pip install gfypy`
 
-Or install the latest development version from source: 
+Or install the latest development version from source:
 
 `python -m pip install -U git+https://github.com/noahkw/gfypy`
 
@@ -22,7 +22,7 @@ gfypy.authenticate()
 gfycat_info = gfypy.get_gfycat('apprehensivefixedgermanpinscher')
 
 # creating a new gfycat via file upload
-gfypy.upload_from_file(f'test_video.webm', title='This is a test video. Don\'t upvote.', 
+gfypy.upload_from_file(f'test_video.webm', title='This is a test video. Don\'t upvote.',
                                            tags=['testing stuff', 'gfycat is awesome'])
 ```
 
@@ -41,6 +41,6 @@ gfy-uploader conf.ini \
 
 A sample `conf.ini` can be found here: https://github.com/noahkw/gfypy/blob/master/bin/conf.ini.sample.
 
-Each section's tags defined under `tags` may be added using `--tags <section>`. 
-Additional tags are added via `--extra-tags`. The title is generated from the filename by 
+Each section's tags defined under `tags` may be added using `--tags <section>`.
+Additional tags are added via `--extra-tags`. The title is generated from the filename by
 taking the base name and removing the extension.

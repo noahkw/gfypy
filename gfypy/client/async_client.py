@@ -22,17 +22,20 @@ class AsyncGfypy(AbstractGfypy):
 
     async def authenticate(self):
         if not self._auth_file_path.is_file():
-            logging.info('Credentials file "%s" does not exist. Creating it now.', self._auth_file_path)
-            with open(self._auth_file_path, 'w') as auth_file:
+            logging.info(
+                'Credentials file "%s" does not exist. Creating it now.',
+                self._auth_file_path,
+            )
+            with open(self._auth_file_path, "w") as auth_file:
                 auth_file.write(json.dumps(self._http.creds))
 
-        with open(self._auth_file_path, 'r') as auth_file:
+        with open(self._auth_file_path, "r") as auth_file:
             self._http.creds = json.loads(auth_file.read())
 
             try:
                 await self._http.refresh_oauth_token(refresh=False)
             except GfypyAuthException as e:
-                if e.code == 'InvalidRefreshToken':
+                if e.code == "InvalidRefreshToken":
                     await self._initial_auth()
                     self._auth_to_disk()
                 else:
@@ -44,23 +47,32 @@ class AsyncGfypy(AbstractGfypy):
     async def _initial_auth(self):
         await self._http.get_oauth_token(self._get_oauth_code())
 
-    async def upload_from_file(self, filename, title='', tags=None, keep_audio=True, check_duplicate=False,
-                               check_upload=True):
+    async def upload_from_file(
+        self,
+        filename,
+        title="",
+        tags=None,
+        keep_audio=True,
+        check_duplicate=False,
+        check_upload=True,
+    ):
         tags = tags or []
 
         key = await self._get_key(title, tags, keep_audio, check_duplicate)
 
         data = FormData()
-        data.add_field('key', key)
-        data.add_field('file', open(filename, 'rb'), filename=filename)
+        data.add_field("key", key)
+        data.add_field("file", open(filename, "rb"), filename=filename)
 
-        await self._http.request(CustomRoute('POST', FILEDROP_ENDPOINT), data=data, no_auth=True)
+        await self._http.request(
+            CustomRoute("POST", FILEDROP_ENDPOINT), data=data, no_auth=True
+        )
 
         if check_upload:
             status = await self._check_upload_status(key)
 
             num_checks = 0
-            while status['task'] != 'complete':
+            while status["task"] != "complete":
                 if num_checks > self.MAX_CHECKS:
                     # the gfycat was likely uploaded correctly, but gfycat is not sending 'task': 'complete'
                     break
@@ -71,42 +83,56 @@ class AsyncGfypy(AbstractGfypy):
             try:
                 gfy = await self.get_gfycat(key)
 
-                logger.info('\n%s has been uploaded as %s/%s.', filename, GFYCAT_URL, key)
+                logger.info(
+                    "\n%s has been uploaded as %s/%s.", filename, GFYCAT_URL, key
+                )
                 return gfy
             except GfypyApiException:
-                logger.info('\n%s has probably been uploaded as %s/%s, but the check was unsuccessful.', filename,
-                            GFYCAT_URL, key)
+                logger.info(
+                    "\n%s has probably been uploaded as %s/%s, but the check was unsuccessful.",
+                    filename,
+                    GFYCAT_URL,
+                    key,
+                )
                 return None
         else:
-            logger.info('\n%s has been uploaded as %s/%s; checks have been skipped.', filename, GFYCAT_URL, key)
+            logger.info(
+                "\n%s has been uploaded as %s/%s; checks have been skipped.",
+                filename,
+                GFYCAT_URL,
+                key,
+            )
 
     async def user_feed_generator(self, user_id=None, per_request=100):
         if not 20 <= per_request <= 100:
-            raise ValueError('Number per request needs to be between 20 and 100.')
+            raise ValueError("Number per request needs to be between 20 and 100.")
 
-        i = 0
-        cursor = ''
+        cursor = ""
 
         if user_id is None:
-            route = Route('GET', '/me/gfycats')
+            route = Route("GET", "/me/gfycats")
         else:
-            route = Route('GET', '/users/{id}/gfycats', id=user_id)
+            route = Route("GET", "/users/{id}/gfycats", id=user_id)
 
         while True:
-            resp = await self._http.request(route, params={'count': per_request, 'cursor': cursor})
+            resp = await self._http.request(
+                route, params={"count": per_request, "cursor": cursor}
+            )
 
-            cursor = resp['cursor']
-            new_gfys = Gfy.from_dict_list(self, resp['gfycats'])
+            cursor = resp["cursor"]
+            new_gfys = Gfy.from_dict_list(self, resp["gfycats"])
             for new_gfy in new_gfys:
                 yield new_gfy
 
             if not cursor:
-                logger.info('Got no new entries from Gfycat. Stopping here.')
+                logger.info("Got no new entries from Gfycat. Stopping here.")
                 break
 
-    async def get_user_feed(self, user_id=None, limit=100, sort_by=None, desc=True, filter_predicate=None):
+    async def get_user_feed(
+        self, user_id=None, limit=100, sort_by=None, desc=True, filter_predicate=None
+    ):
         if limit % 100 != 0 and limit >= 0:
-            logger.warning(f'Limit needs to be divisible by 100. Rounding up.')
+            logger.warning("Limit needs to be divisible by 100. Rounding up.")
 
         gfycats = []
 
@@ -120,6 +146,8 @@ class AsyncGfypy(AbstractGfypy):
             gfycats = [g for g in gfycats if filter_predicate(g)]
 
         if sort_by:
-            gfycats = sorted(gfycats, key=lambda gfy: getattr(gfy, sort_by), reverse=desc)
+            gfycats = sorted(
+                gfycats, key=lambda gfy: getattr(gfy, sort_by), reverse=desc
+            )
 
         return gfycats

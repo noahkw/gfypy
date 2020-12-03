@@ -4,8 +4,8 @@ from conf import CLIENT_ID, CLIENT_SECRET
 from gfypy import Gfypy, is_pending
 from gfypy.const import GFYCAT_URL
 
-GFYCAT_SUPPORT_EMAIL = 'support@gfycat.com'
-SUBJECT = 'Gfys stuck on pending review'
+GFYCAT_SUPPORT_EMAIL = "support@gfycat.com"
+SUBJECT = "Gfys stuck on pending review"
 
 
 def pending_check():
@@ -15,20 +15,17 @@ def pending_check():
     gfycats = gfypy.get_own_feed(limit=-1, filter_predicate=is_pending)
     body = "Hi,\n\nThese gfys are stuck on pending review:\n\n"
 
-    body += '\n'.join([GFYCAT_URL + '/' + gfy['gfyId'] for gfy in gfycats])
+    body += "\n".join([GFYCAT_URL + "/" + gfy["gfyId"] for gfy in gfycats])
     body += "\n\nThanks"
 
-    params = {
-        'subject': SUBJECT,
-        'body': body
-    }
+    params = {"subject": SUBJECT, "body": body}
 
-    mailto = f'mailto:{GFYCAT_SUPPORT_EMAIL}?{urlencode(params, quote_via=quote)}'
+    mailto = f"mailto:{GFYCAT_SUPPORT_EMAIL}?{urlencode(params, quote_via=quote)}"
     print(mailto)
 
 
-if __name__ == '__main__':
-    gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, '../creds.json')
+if __name__ == "__main__":
+    gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, "../creds.json")
     gfypy.authenticate()
 
     pending_check()
