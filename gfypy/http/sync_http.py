@@ -31,6 +31,9 @@ class SyncHttpClient(AbstractHttpClient):
             "resource_owner": None,
         }
 
+    def close(self):
+        self._session.close()
+
     def request(self, route, **kwargs):
         no_auth = kwargs.pop("no_auth", False)
         refresh = kwargs.pop("refresh", True)

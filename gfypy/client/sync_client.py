@@ -40,6 +40,9 @@ class Gfypy(AbstractGfypy):
                 else:
                     raise
 
+    def close(self):
+        self._http.close()
+
     def _initial_auth(self):
         self._http.get_oauth_token(self._get_oauth_code())
 
