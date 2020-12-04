@@ -62,11 +62,13 @@ class AsyncGfypy(AbstractGfypy):
 
         data = FormData()
         data.add_field("key", key)
-        data.add_field("file", open(filename, "rb"), filename=filename)
 
-        await self._http.request(
-            CustomRoute("POST", FILEDROP_ENDPOINT), data=data, no_auth=True
-        )
+        with open(filename, "rb") as file:
+            data.add_field("file", file, filename=filename)
+
+            await self._http.request(
+                CustomRoute("POST", FILEDROP_ENDPOINT), data=data, no_auth=True
+            )
 
         if check_upload:
             status = await self._check_upload_status(key)

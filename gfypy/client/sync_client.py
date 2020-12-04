@@ -59,7 +59,9 @@ class Gfypy(AbstractGfypy):
 
         key = self._get_key(title, tags, keep_audio, check_duplicate)
         payload = {"key": key}
-        files = {"file": (key, open(filename, "rb").read())}
+
+        with open(filename, "rb") as file:
+            files = {"file": (key, file.read())}
 
         self._http.request(
             CustomRoute("POST", FILEDROP_ENDPOINT),
