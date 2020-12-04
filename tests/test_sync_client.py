@@ -51,3 +51,8 @@ class TestSyncGfypy(unittest.TestCase):
 
         # for backwards compatibility with dict-like user objects
         self.assertEqual(user["username"], username)
+
+    def test_get_gfycat(self):
+        gfy = self.gfypy.get_gfycat("inexperiencedsneakyacouchi")
+
+        self.assertEqual(gfy.title, "This is a test upload")

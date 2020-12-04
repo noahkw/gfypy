@@ -4,62 +4,35 @@ from datetime import datetime
 from .route import Route
 
 from dataclasses import dataclass
-from typing import List, Any, Set, Optional
+import typing
 
 
 @dataclass
 class ContentUrl:
-    url: str
-    size: int
-    height: int
-    width: int
-
     def __init__(self, **kwargs):
-        self.url = kwargs.pop("url", None)
-        self.size = kwargs.pop("size", None)
-        self.height = kwargs.pop("height", None)
-        self.width = kwargs.pop("width", None)
+        self.url: str = kwargs.pop("url", None)
+        self.size: int = kwargs.pop("size", None)
+        self.height: int = kwargs.pop("height", None)
+        self.width: int = kwargs.pop("width", None)
 
 
 @dataclass
 class UserData:
-    name: str
-    profile_image_url: str
-    url: str
-    username: str
-    followers: int
-    subscription: int
-    following: int
-    profile_url: str
-    views: int
-    verified: bool
-
     def __init__(self, **kwargs):
-        self.name = kwargs.pop("name", None)
-        self.profile_image_url = kwargs.pop("profileImageUrl", None)
-        self.url = kwargs.pop("url", None)
-        self.username = kwargs.pop("username", None)
-        self.followers = kwargs.pop("followers", None)
-        self.subscription = kwargs.pop("subscription", None)
-        self.following = kwargs.pop("following", None)
-        self.profile_url = kwargs.pop("profileUrl", None)
-        self.views = kwargs.pop("views", None)
-        self.verified = kwargs.pop("verified", None)
+        self.name: str = kwargs.pop("name", None)
+        self.profile_image_url: str = kwargs.pop("profileImageUrl", None)
+        self.url: str = kwargs.pop("url", None)
+        self.username: str = kwargs.pop("username", None)
+        self.followers: int = kwargs.pop("followers", None)
+        self.subscription: int = kwargs.pop("subscription", None)
+        self.following: int = kwargs.pop("following", None)
+        self.profile_url: str = kwargs.pop("profileUrl", None)
+        self.views: int = kwargs.pop("views", None)
+        self.verified: bool = kwargs.pop("verified", None)
 
 
 @dataclass
 class ContentUrls:
-    max2_mb_gif: ContentUrl
-    webp: ContentUrl
-    max1_mb_gif: ContentUrl
-    _100_px_gif: ContentUrl
-    mobile_poster: ContentUrl
-    mp4: ContentUrl
-    webm: ContentUrl
-    max5_mb_gif: ContentUrl
-    large_gif: ContentUrl
-    mobile: ContentUrl
-
     def __init__(self, **kwargs):
         self.max2_mb_gif = (
             ContentUrl(**kwargs.pop("max2mbGif")) if "max2mbGif" in kwargs else None
@@ -89,55 +62,6 @@ class ContentUrls:
 
 @dataclass
 class Gfy(dict):
-    tags: Set[str]
-    language_categories: List[Any]
-    domain_whitelist: List[Any]
-    geo_whitelist: List[Any]
-    published: int
-    nsfw: str
-    gatekeeper: int
-    mp4_url: str
-    gif_url: str
-    webm_url: str
-    webp_url: str
-    mobile_url: str
-    mobile_poster_url: str
-    extra_lemmas: str
-    thumb100_poster_url: str
-    mini_url: str
-    gif100_px: str
-    mini_poster_url: str
-    max5_mb_gif: str
-    title: str
-    max2_mb_gif: str
-    max1_mb_gif: str
-    poster_url: str
-    language_text: str
-    views: int
-    user_name: str
-    description: str
-    sitename: str
-    has_transparency: bool
-    has_audio: bool
-    likes: int
-    dislikes: int
-    gfy_number: int
-    user_display_name: str
-    user_profile_image_url: str
-    gfy_id: str
-    gfy_name: str
-    avg_color: str
-    width: int
-    height: int
-    frame_rate: float
-    num_frames: int
-    mp4_size: int
-    webm_size: int
-    create_date: datetime
-    source: int
-    content_urls: Optional[ContentUrls]
-    user_data: Optional[UserData]
-
     def __init__(self, http, **kwargs):
         super().__init__(kwargs)
         self._http = http
@@ -147,56 +71,62 @@ class Gfy(dict):
         self.user_data = UserData(**kwargs.pop("userData", {}))
 
         # explicit cast to int required because the API sometimes returns a str
-        self.likes = int(kwargs.pop("likes", 0))
-        self.dislikes = int(kwargs.pop("dislikes", 0))
-        self.gfy_number = int(kwargs.pop("gfyNumber", 0))
+        self.likes: int = int(kwargs.pop("likes", 0))
+        self.dislikes: int = int(kwargs.pop("dislikes", 0))
+        self.gfy_number: int = int(kwargs.pop("gfyNumber", 0))
 
         self.title = kwargs.pop("title", None)
-        self.tags = set(kwargs.pop("tags", None))
-        self.language_categories = kwargs.pop("languageCategories", [])
-        self.domain_whitelist = kwargs.pop("domainWhitelist", [])
-        self.geo_whitelist = kwargs.pop("geoWhitelist", [])
-        self.published = kwargs.pop("published", None)
-        self.nsfw = kwargs.pop("nsfw", None)
-        self.gatekeeper = kwargs.pop("gatekeeper", None)
-        self.mp4_url = kwargs.pop("mp4Url", None)
-        self.gif_url = kwargs.pop("gifUrl", None)
-        self.webm_url = kwargs.pop("webmUrl", None)
-        self.webp_url = kwargs.pop("webpUrl", None)
-        self.mobile_url = kwargs.pop("mobileUrl", None)
-        self.mobile_poster_url = kwargs.pop("mobilePosterUrl", None)
-        self.extra_lemmas = kwargs.pop("extraLemmas", None)
-        self.thumb100_poster_url = kwargs.pop("thumb100PosterUrl", None)
-        self.mini_url = kwargs.pop("miniUrl", None)
-        self.gif100_px = kwargs.pop("gif100px", None)
-        self.mini_poster_url = kwargs.pop("miniPosterUrl", None)
-        self.max5_mb_gif = kwargs.pop("max5mbGif", None)
-        self.max2_mb_gif = kwargs.pop("max2mbGif", None)
-        self.max1_mb_gif = kwargs.pop("max1mbGif", None)
-        self.poster_url = kwargs.pop("posterUrl", None)
-        self.language_text = kwargs.pop("languageText", None)
-        self.views = kwargs.pop("views", None)
-        self.user_name = kwargs.pop("userName", None)
-        self.description = kwargs.pop("description", None)
-        self.sitename = kwargs.pop("sitename", None)
-        self.has_transparency = kwargs.pop("hasTransparency", None)
-        self.has_audio = kwargs.pop("hasAudio", None)
-        self.gfy_id = kwargs.pop("gfyId", None)
-        self.gfy_name = kwargs.pop("gfyName", None)
-        self.width = kwargs.pop("width", None)
-        self.height = kwargs.pop("height", None)
-        self.frame_rate = kwargs.pop("frameRate", None)
-        self.num_frames = kwargs.pop("numFrames", None)
-        self.mp4_size = kwargs.pop("mp4Size", None)
-        self.webm_size = kwargs.pop("webmSize", None)
-        self.create_date = datetime.fromtimestamp(kwargs.pop("createDate", None))
-        self.source = kwargs.pop("source", None)
-        self.gfy_slug = kwargs.pop("gfySlug", None)
-        self.md5 = kwargs.pop("md5", None)
-        self.rating = kwargs.pop("rating", None)
-        self.avg_color = kwargs.pop("avgColor", None)
-        self.user_display_name = kwargs.pop("userDisplayName", None)
-        self.user_profile_image_url = kwargs.pop("userProfileImageUrl", None)
+        self.tags: typing.Set[str] = set(kwargs.pop("tags", None))
+        self.language_categories: typing.List[typing.Any] = kwargs.pop(
+            "languageCategories", []
+        )
+        self.domain_whitelist: typing.List[typing.Any] = kwargs.pop(
+            "domainWhitelist", []
+        )
+        self.geo_whitelist: typing.List[typing.Any] = kwargs.pop("geoWhitelist", [])
+        self.published: int = kwargs.pop("published", None)
+        self.nsfw: int = kwargs.pop("nsfw", None)
+        self.gatekeeper: int = kwargs.pop("gatekeeper", None)
+        self.mp4_url: str = kwargs.pop("mp4Url", None)
+        self.gif_url: str = kwargs.pop("gifUrl", None)
+        self.webm_url: str = kwargs.pop("webmUrl", None)
+        self.webp_url: str = kwargs.pop("webpUrl", None)
+        self.mobile_url: str = kwargs.pop("mobileUrl", None)
+        self.mobile_poster_url: str = kwargs.pop("mobilePosterUrl", None)
+        self.extra_lemmas: str = kwargs.pop("extraLemmas", None)
+        self.thumb100_poster_url: str = kwargs.pop("thumb100PosterUrl", None)
+        self.mini_url: str = kwargs.pop("miniUrl", None)
+        self.gif100_px: str = kwargs.pop("gif100px", None)
+        self.mini_poster_url: str = kwargs.pop("miniPosterUrl", None)
+        self.max5_mb_gif: str = kwargs.pop("max5mbGif", None)
+        self.max2_mb_gif: str = kwargs.pop("max2mbGif", None)
+        self.max1_mb_gif: str = kwargs.pop("max1mbGif", None)
+        self.poster_url: str = kwargs.pop("posterUrl", None)
+        self.language_text: str = kwargs.pop("languageText", None)
+        self.views: int = kwargs.pop("views", None)
+        self.user_name: str = kwargs.pop("userName", None)
+        self.description: str = kwargs.pop("description", None)
+        self.sitename: str = kwargs.pop("sitename", None)
+        self.has_transparency: bool = kwargs.pop("hasTransparency", None)
+        self.has_audio: bool = kwargs.pop("hasAudio", None)
+        self.gfy_id: str = kwargs.pop("gfyId", None)
+        self.gfy_name: str = kwargs.pop("gfyName", None)
+        self.width: int = kwargs.pop("width", None)
+        self.height: int = kwargs.pop("height", None)
+        self.frame_rate: float = kwargs.pop("frameRate", None)
+        self.num_frames: int = kwargs.pop("numFrames", None)
+        self.mp4_size: int = kwargs.pop("mp4Size", None)
+        self.webm_size: int = kwargs.pop("webmSize", None)
+        self.create_date: datetime = datetime.fromtimestamp(
+            kwargs.pop("createDate", None)
+        )
+        self.source: int = kwargs.pop("source", None)
+        self.gfy_slug: str = kwargs.pop("gfySlug", None)
+        self.md5: str = kwargs.pop("md5", None)
+        self.rating: typing.Any = kwargs.pop("rating", None)
+        self.avg_color: str = kwargs.pop("avgColor", None)
+        self.user_display_name: str = kwargs.pop("userDisplayName", None)
+        self.user_profile_image_url: str = kwargs.pop("userProfileImageUrl", None)
 
     @staticmethod
     def from_dict(http, source):
