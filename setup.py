@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 from gfypy import __version__
 
+dependencies = ["requests", "tqdm"]
+
 setup(
     name="gfypy",
     version=__version__,
@@ -29,7 +31,8 @@ setup(
     ],
     keywords=["gfycat api wrapper"],
     packages=find_packages(),
-    install_requires=["requests", "tqdm"],
+    install_requires=dependencies,
+    setup_requires=dependencies,
     extras_require={"async": ["aiohttp"]},
     scripts=["bin/gfy-uploader"],
 )
