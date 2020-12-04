@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
-from gfypy import __version__
+
+exec(open(r"gfypy/version.py").read())
 
 dependencies = ["requests", "tqdm"]
 
 setup(
     name="gfypy",
-    version=__version__,
+    version=__version__,  # noqa
     description="Python wrapper for the Gfycat API",
     long_description="Provides an easy to use interface to the API at "
     "https://developers.gfycat.com/api/.",

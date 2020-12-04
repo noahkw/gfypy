@@ -1,8 +1,15 @@
-from .client import *
+from .client import Gfypy
+
+try:
+    from .client import AsyncGfypy
+except ImportError:
+    pass
+
 from .exceptions import GfypyApiException, GfypyAuthException, GfypyException
 from .gfy import Gfy
 from .helpers import is_pending
 from .user import User
+from .version import __version__
 
 __all__ = [
     "AsyncGfypy",
@@ -13,6 +20,5 @@ __all__ = [
     "Gfy",
     "is_pending",
     "User",
+    "__version__",
 ]
-
-__version__ = "1.2.2"
