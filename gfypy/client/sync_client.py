@@ -50,11 +50,13 @@ class Gfypy(AbstractGfypy):
         self,
         filename,
         title="",
-        tags=[],
+        tags=None,
         keep_audio=True,
         check_duplicate=False,
         check_upload=True,
     ):
+        tags = tags or []
+
         key = self._get_key(title, tags, keep_audio, check_duplicate)
         payload = {"key": key}
         files = {"file": (key, open(filename, "rb").read())}
