@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from gfypy import __version__
 
 setup(
     name="gfypy",
-    version="1.2.1",
+    version=__version__,
     description="Python wrapper for the Gfycat API",
     long_description="Provides an easy to use interface to the API at "
     "https://developers.gfycat.com/api/.",
