@@ -26,44 +26,81 @@ def load_sections(specified_sections, sections):
             section = sections[section]
             tags_.extend(json.loads(section))
         except KeyError:
-            raise KeyError(f'{section} was not found in config file.')
+            raise KeyError(f"{section} was not found in config file.")
     return tags_
 
 
 def main():
-    parser = ArgumentParser(description='Gfycat CLI uploader')
-    parser.add_argument('config', metavar='config-file')
-    parser.add_argument('files', nargs='+')
-    parser.add_argument('--tags', '-t', nargs='*', help='Which tags sections to use from the config.')
-    parser.add_argument('--extra-tags', '-e', nargs='*', help='Which extra tags to add.',
-                        dest='extra_tags')
-    parser.add_argument('--dry-run', '-d', action='store_true', dest='dry_run',
-                        help='Doesn\'t actually upload anything.')
-    parser.add_argument('--sort', '-s', action='store_true', dest='sort',
-                        help='Sorts the files to upload by the suffix after "-".')
-    parser.add_argument('--interactive', '-i', action='store_true', dest='interactive',
-                        help='Asks for the title and tags for each file.')
-    parser.add_argument('--fast', '-f', action='store_true', dest='fast',
-                        help='Skips all upload checks.')
-    parser.add_argument('--headless', '-hl', action='store_true', dest='headless',
-                        help='Starts the Gfypy client in headless mode so that the user may authorize the app '
-                             'on another machine.')
+    parser = ArgumentParser(description="Gfycat CLI uploader")
+    parser.add_argument("config", metavar="config-file")
+    parser.add_argument("files", nargs="+")
+    parser.add_argument(
+        "--tags", "-t", nargs="*", help="Which tags sections to use from the config."
+    )
+    parser.add_argument(
+        "--extra-tags",
+        "-e",
+        nargs="*",
+        help="Which extra tags to add.",
+        dest="extra_tags",
+    )
+    parser.add_argument(
+        "--dry-run",
+        "-d",
+        action="store_true",
+        dest="dry_run",
+        help="Doesn't actually upload anything.",
+    )
+    parser.add_argument(
+        "--sort",
+        "-s",
+        action="store_true",
+        dest="sort",
+        help='Sorts the files to upload by the suffix after "-".',
+    )
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true",
+        dest="interactive",
+        help="Asks for the title and tags for each file.",
+    )
+    parser.add_argument(
+        "--fast",
+        "-f",
+        action="store_true",
+        dest="fast",
+        help="Skips all upload checks.",
+    )
+    parser.add_argument(
+        "--headless",
+        "-hl",
+        action="store_true",
+        dest="headless",
+        help="Starts the Gfypy client in headless mode so that the user may authorize the app "
+        "on another machine.",
+    )
 
     args = parser.parse_args()
 
     config = ConfigParser()
-    config.read(args.config, encoding='utf-8')
-    credentials = config['credentials']
+    config.read(args.config, encoding="utf-8")
+    credentials = config["credentials"]
 
     tags = args.extra_tags or []
     sections = args.tags or []
 
-    tags.extend(load_sections(sections, config['tags']))
+    tags.extend(load_sections(sections, config["tags"]))
 
-    gfypy = Gfypy(credentials['client_id'], credentials['client_secret'], '../creds.json', headless=args.headless)
+    gfypy = Gfypy(
+        credentials["client_id"],
+        credentials["client_secret"],
+        "../creds.json",
+        headless=args.headless,
+    )
     gfypy.authenticate()
 
-    if os.name == 'nt':
+    if os.name == "nt":
         files = []
         # windows shell globbing
         for file in args.files:
@@ -71,30 +108,44 @@ def main():
     else:
         files = args.files
 
-    uploadables = [Uploadable(splitext(basename(file))[0], file, tags.copy()) for file in files]
+    uploadables = [
+        Uploadable(splitext(basename(file))[0], file, tags.copy()) for file in files
+    ]
     if args.sort:
-        uploadables.sort(key=lambda x: int(x.title.split('-')[-1]))
+        uploadables.sort(key=lambda x: int(x.title.split("-")[-1]))
 
     if args.interactive:
         for uploadable in uploadables:
-            new_title = input(f'\nWhat should the title of file "{uploadable.path}" be? '
-                              f'(Leave blank to keep "{uploadable.title}"): ')
+            new_title = input(
+                f'\nWhat should the title of file "{uploadable.path}" be? '
+                f'(Leave blank to keep "{uploadable.title}"): '
+            )
             if len(new_title) > 0:
                 uploadable.title = new_title
 
-            new_tags = input(f'\nWhat add extra tags should be added to "{uploadable.path}? '
-                             f'(Comma-separated sections. Leave blank to keep "{uploadable.tags}"): ')
-            new_tags_tokenized = [x.strip() for x in new_tags.split(',')]
+            new_tags = input(
+                f'\nWhat add extra tags should be added to "{uploadable.path}? '
+                f'(Comma-separated sections. Leave blank to keep "{uploadable.tags}"): '
+            )
+            new_tags_tokenized = [x.strip() for x in new_tags.split(",")]
 
             if len(new_tags) > 0:
-                uploadable.tags.extend(load_sections(new_tags_tokenized, config['tags']))
+                uploadable.tags.extend(
+                    load_sections(new_tags_tokenized, config["tags"])
+                )
 
     for uploadable in uploadables:
-        print(f'Title: {uploadable.title}; Path: {uploadable.path}; Tags: {uploadable.tags}')
+        print(
+            f"Title: {uploadable.title}; Path: {uploadable.path}; Tags: {uploadable.tags}"
+        )
         if not args.dry_run:
-            gfypy.upload_from_file(uploadable.path, title=uploadable.title, tags=uploadable.tags,
-                                   check_upload=not args.fast)
+            gfypy.upload_from_file(
+                uploadable.path,
+                title=uploadable.title,
+                tags=uploadable.tags,
+                check_upload=not args.fast,
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

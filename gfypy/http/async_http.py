@@ -99,7 +99,7 @@ class AsyncHttpClient(AbstractHttpClient):
             Route("POST", "/oauth/token"),
             data=json.dumps(payload),
             headers={"content-type": "application/json"},
-            **kwargs
+            **kwargs,
         )
 
         self.creds = resp
