@@ -1,5 +1,5 @@
-import logging
-import sys
+import os
+import time
 import warnings
 
 from conf_test import CLIENT_ID, CLIENT_SECRET
@@ -7,19 +7,14 @@ from gfypy import AsyncGfypy
 
 import unittest
 
+from tests.test_sync_client import setup_logging
+
 warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
 
 
 class TestAsyncGfypy(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
-        logger = logging.getLogger("gfypy")
-        logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setLevel(logging.DEBUG)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
-        )
-        logger.addHandler(handler)
+        self.logger = setup_logging()
 
         self.gfypy = AsyncGfypy(CLIENT_ID, CLIENT_SECRET, "../creds.json")
         await self.gfypy.authenticate()
@@ -56,3 +51,18 @@ class TestAsyncGfypy(unittest.IsolatedAsyncioTestCase):
         gfy = await self.gfypy.get_gfycat("inexperiencedsneakyacouchi")
 
         self.assertEqual(gfy.title, "This is a test upload")
+
+
+class TestAsyncGfypyAuth(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.logger = setup_logging()
+        self.creds_file = f"./creds_{time.time()}.json"
+
+    async def asyncTearDown(self) -> None:
+        self.logger.info("Cleaning up")
+        os.remove(self.creds_file)
+
+    async def test_headless_auth(self):
+        gfypy = AsyncGfypy(CLIENT_ID, CLIENT_SECRET, self.creds_file, headless=True)
+        await gfypy.authenticate()
+        await gfypy.close()

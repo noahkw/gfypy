@@ -1,5 +1,7 @@
 import logging
+import os
 import sys
+import time
 import warnings
 
 from conf_test import CLIENT_ID, CLIENT_SECRET
@@ -10,16 +12,21 @@ import unittest
 warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
 
 
+def setup_logging():
+    logger = logging.getLogger("gfypy")
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+    )
+    logger.addHandler(handler)
+    return logger
+
+
 class TestSyncGfypy(unittest.TestCase):
     def setUp(self) -> None:
-        logger = logging.getLogger("gfypy")
-        logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setLevel(logging.DEBUG)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
-        )
-        logger.addHandler(handler)
+        self.logger = setup_logging()
 
         self.gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, "../creds.json")
         self.gfypy.authenticate()
@@ -56,3 +63,18 @@ class TestSyncGfypy(unittest.TestCase):
         gfy = self.gfypy.get_gfycat("inexperiencedsneakyacouchi")
 
         self.assertEqual(gfy.title, "This is a test upload")
+
+
+class TestSyncGfypyAuth(unittest.TestCase):
+    def setUp(self) -> None:
+        self.logger = setup_logging()
+        self.creds_file = f"./creds_{time.time()}.json"
+
+    def tearDown(self) -> None:
+        self.logger.info("Cleaning up")
+        os.remove(self.creds_file)
+
+    def test_headless_auth(self):
+        gfypy = Gfypy(CLIENT_ID, CLIENT_SECRET, self.creds_file, headless=True)
+        gfypy.authenticate()
+        gfypy.close()

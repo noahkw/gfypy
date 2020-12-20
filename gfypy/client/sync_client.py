@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class Gfypy(AbstractGfypy):
-    def __init__(self, client_id, client_secret, auth_file_path):
-        super().__init__(client_id, client_secret, auth_file_path)
+    def __init__(self, client_id, client_secret, auth_file_path, **kwargs):
+        super().__init__(client_id, client_secret, auth_file_path, **kwargs)
         self._http = SyncHttpClient(client_id, client_secret)
 
     def authenticate(self):

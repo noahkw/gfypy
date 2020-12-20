@@ -53,21 +53,16 @@ class AbstractGfypy:
     MAX_TAGS = 20
     MAX_CHECKS = 30
 
-    def __init__(self, client_id, client_secret, auth_file_path):
+    def __init__(self, client_id, client_secret, auth_file_path, headless=False):
         self._client_id = client_id
         self._client_secret = client_secret
         self._auth_file_path = Path(auth_file_path)
+        self._headless = headless
 
     def _get_oauth_code(self):
         """
         Gets authorization token
         """
-        server = ThreadingHTTPServer(("localhost", 8000), AuthCallbackRequestHandler)
-        server.code = None
-        server_thread = Thread(target=server.serve_forever)
-        server_thread.daemon = False
-        server_thread.start()
-
         params = {
             "client_id": self._client_id,
             "scope": "all",
@@ -78,16 +73,30 @@ class AbstractGfypy:
 
         auth_url = f"{AUTH_ENDPOINT}?{urlencode(params)}"
 
-        webbrowser.open(auth_url)
+        if self._headless:
+            return input(
+                f"Please open the following URL in a web browser, authorize the application and enter the "
+                f"code from the code param (?code=...).\n{auth_url}\nCode: "
+            )
+        else:
+            server = ThreadingHTTPServer(
+                ("localhost", 8000), AuthCallbackRequestHandler
+            )
+            server.code = None
+            server_thread = Thread(target=server.serve_forever)
+            server_thread.daemon = False
+            server_thread.start()
 
-        while server.code is None:
-            time.sleep(1)
+            webbrowser.open(auth_url)
 
-        assassin = Thread(target=server.shutdown)
-        assassin.daemon = True
-        assassin.start()
+            while server.code is None:
+                time.sleep(1)
 
-        return server.code
+            assassin = Thread(target=server.shutdown)
+            assassin.daemon = True
+            assassin.start()
+
+            return server.code
 
     def _auth_to_disk(self):
         with open(self._auth_file_path, "w") as auth_file:

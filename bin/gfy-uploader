@@ -45,6 +45,9 @@ def main():
                         help='Asks for the title and tags for each file.')
     parser.add_argument('--fast', '-f', action='store_true', dest='fast',
                         help='Skips all upload checks.')
+    parser.add_argument('--headless', '-hl', action='store_true', dest='headless',
+                        help='Starts the Gfypy client in headless mode so that the user may authorize the app '
+                             'on another machine.')
 
     args = parser.parse_args()
 
@@ -57,7 +60,7 @@ def main():
 
     tags.extend(load_sections(sections, config['tags']))
 
-    gfypy = Gfypy(credentials['client_id'], credentials['client_secret'], '../creds.json')
+    gfypy = Gfypy(credentials['client_id'], credentials['client_secret'], '../creds.json', headless=args.headless)
     gfypy.authenticate()
 
     if os.name == 'nt':

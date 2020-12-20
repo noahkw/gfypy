@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class AsyncGfypy(AbstractGfypy):
-    def __init__(self, client_id, client_secret, auth_file_path):
-        super().__init__(client_id, client_secret, auth_file_path)
+    def __init__(self, client_id, client_secret, auth_file_path, **kwargs):
+        super().__init__(client_id, client_secret, auth_file_path, **kwargs)
         self._http = AsyncHttpClient(client_id, client_secret)
 
     async def authenticate(self):
